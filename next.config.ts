@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   // GitHub Pages 배포 설정
   output: 'export',
   trailingSlash: true,
+  assetPrefix: '/whisky-Log/',
+  basePath: '/whisky-Log',
   images: {
     unoptimized: true,
     domains: ['localhost', '127.0.0.1', '121.152.193.247', 'whisky-log.com', 'www.whisky-log.com'],
