@@ -1,0 +1,42 @@
+
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1F2937;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FCD34D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 배경 -->
+  <rect width="512" height="512" fill="url(#bg)" rx="80"/>
+  
+  <!-- 위스키 글래스 -->
+  <g transform="translate(156, 156)">
+    <!-- 글래스 본체 -->
+    <path d="M100 50 L100 200 L80 220 L120 220 L100 200 Z" 
+          fill="none" stroke="url(#glass)" stroke-width="8" stroke-linejoin="round"/>
+    
+    <!-- 글래스 테두리 -->
+    <path d="M80 220 L120 220" stroke="url(#glass)" stroke-width="4"/>
+    
+    <!-- 위스키 액체 -->
+    <path d="M90 180 L110 180 L105 200 L95 200 Z" fill="#D97706"/>
+    
+    <!-- 얼음 -->
+    <circle cx="95" cy="160" r="3" fill="#E5E7EB"/>
+    <circle cx="105" cy="165" r="2" fill="#E5E7EB"/>
+    
+    <!-- 증기 -->
+    <path d="M95 50 Q100 40 105 50" stroke="#E5E7EB" stroke-width="2" fill="none"/>
+    <path d="M98 45 Q103 35 108 45" stroke="#E5E7EB" stroke-width="2" fill="none"/>
+  </g>
+  
+  <!-- 텍스트 -->
+  <text x="256" y="420" text-anchor="middle" 
+        font-family="Arial, sans-serif" font-size="48" font-weight="bold" 
+        fill="white">WL</text>
+</svg>
