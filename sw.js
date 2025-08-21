@@ -4,11 +4,11 @@ const DYNAMIC_CACHE = 'whisky-log-dynamic-v1.0.0';
 
 // 캐시할 정적 파일들
 const STATIC_FILES = [
-  '/',
-  '/offline.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/next.svg'
+  '/whisky-Log/',
+  '/whisky-Log/offline.html',
+  '/whisky-Log/manifest.json',
+  '/whisky-Log/favicon.ico',
+  '/whisky-Log/next.svg'
 ];
 
 // 캐시할 API 엔드포인트들
@@ -82,7 +82,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           // 오프라인 시 캐시된 페이지 반환
-          return caches.match('/offline.html');
+          return caches.match('/whisky-Log/offline.html');
         })
     );
     return;
