@@ -927,14 +927,16 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
           right: 0,
           height: isMobile ? (() => {
             const savedPosition = sessionStorage.getItem('scrollPosition');
-            return savedPosition ? `calc(100vh - ${parseInt(savedPosition)}px)` : '100vh';
+            // 모바일 네비게이션 바 높이를 고려 (약 60px)
+            return savedPosition ? `calc(100vh - ${parseInt(savedPosition)}px - 60px)` : 'calc(100vh - 60px)';
           })() : '100vh',
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 9999999,
+          zIndex: 999999999,
           padding: '20px',
+          paddingBottom: isMobile ? '80px' : '20px',
           overflowY: 'auto',
           transform: 'translateZ(0)'
         }}>
@@ -976,7 +978,7 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 99999999,
+                zIndex: 9999999999,
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
               }}
             >
