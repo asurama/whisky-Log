@@ -492,10 +492,11 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
               setSelectedTasting(tasting);
               setShowTastingModal(true);
               console.log('showTastingModal 상태 설정됨');
-              // 현재 스크롤 위치를 저장
+              // 현재 스크롤 위치를 저장 (더 정확한 위치)
               if (typeof window !== 'undefined') {
-                sessionStorage.setItem('scrollPosition', window.scrollY.toString());
-                console.log('스크롤 위치 저장:', window.scrollY);
+                const scrollPosition = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+                sessionStorage.setItem('scrollPosition', scrollPosition.toString());
+                console.log('스크롤 위치 저장:', scrollPosition);
               }
             }}
             onMouseEnter={(e) => {
@@ -921,14 +922,24 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
           position: 'fixed',
           top: isMobile ? (() => {
             const savedPosition = sessionStorage.getItem('scrollPosition');
-            return savedPosition ? `${parseInt(savedPosition)}px` : '0px';
+            console.log('저장된 스크롤 위치:', savedPosition);
+            if (savedPosition) {
+              const scrollTop = parseInt(savedPosition);
+              console.log('계산된 top 위치:', scrollTop);
+              return `${scrollTop}px`;
+            }
+            return '0px';
           })() : '0px',
           left: 0,
           right: 0,
           height: isMobile ? (() => {
             const savedPosition = sessionStorage.getItem('scrollPosition');
-            // 모바일 네비게이션 바 높이를 고려 (약 60px)
-            return savedPosition ? `calc(100vh - ${parseInt(savedPosition)}px - 60px)` : 'calc(100vh - 60px)';
+            if (savedPosition) {
+              const scrollTop = parseInt(savedPosition);
+              // 모바일 네비게이션 바 높이를 고려 (약 60px)
+              return `calc(100vh - ${scrollTop}px - 60px)`;
+            }
+            return 'calc(100vh - 60px)';
           })() : '100vh',
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
