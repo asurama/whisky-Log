@@ -929,7 +929,7 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 2000,
+          zIndex: 9999999,
           padding: '20px',
           overflowY: 'auto',
           transform: 'translateZ(0)'
@@ -972,7 +972,7 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 2001,
+                zIndex: 99999999,
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
               }}
             >
