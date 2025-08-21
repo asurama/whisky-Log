@@ -1,6 +1,6 @@
-const CACHE_NAME = 'whisky-log-v1.0.0';
-const STATIC_CACHE = 'whisky-log-static-v1.0.0';
-const DYNAMIC_CACHE = 'whisky-log-dynamic-v1.0.0';
+const CACHE_NAME = 'whisky-log-v2.0.0';
+const STATIC_CACHE = 'whisky-log-static-v2.0.0';
+const DYNAMIC_CACHE = 'whisky-log-dynamic-v2.0.0';
 
 // 캐시할 정적 파일들
 const STATIC_FILES = [
@@ -8,7 +8,17 @@ const STATIC_FILES = [
   '/whisky-Log/offline.html',
   '/whisky-Log/manifest.json',
   '/whisky-Log/favicon.ico',
-  '/whisky-Log/next.svg'
+  '/whisky-Log/next.svg',
+  '/whisky-Log/icons/icon-72x72.png',
+  '/whisky-Log/icons/icon-96x96.png',
+  '/whisky-Log/icons/icon-128x128.png',
+  '/whisky-Log/icons/icon-144x144.png',
+  '/whisky-Log/icons/icon-152x152.png',
+  '/whisky-Log/icons/icon-192x192.png',
+  '/whisky-Log/icons/icon-192x192-maskable.png',
+  '/whisky-Log/icons/icon-384x384.png',
+  '/whisky-Log/icons/icon-512x512.png',
+  '/whisky-Log/icons/icon-512x512-maskable.png'
 ];
 
 // 캐시할 API 엔드포인트들

@@ -3,6 +3,7 @@
   "short_name": "Whisky Log",
   "description": "위스키 컬렉션을 관리하고 시음 기록을 남기는 개인 위스키 로그 앱",
   "start_url": "/whisky-Log/",
+  "id": "/whisky-Log/",
   "display": "standalone",
   "background_color": "#1F2937",
   "theme_color": "#3B82F6",
@@ -46,7 +47,8 @@
       "src": "/whisky-Log/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any",
+      "density": "1.0"
     },
     {
       "src": "/whisky-Log/icons/icon-192x192-maskable.png",
@@ -64,7 +66,8 @@
       "src": "/whisky-Log/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any",
+      "density": "1.0"
     },
     {
       "src": "/whisky-Log/icons/icon-512x512-maskable.png",
