@@ -915,16 +915,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: isMobile ? (() => {
-            const savedPosition = sessionStorage.getItem('scrollPosition');
-            return savedPosition ? `${savedPosition}px` : '0px';
-          })() : '0px',
+          top: 0,
           left: 0,
           right: 0,
-          bottom: isMobile ? (() => {
-            const savedPosition = sessionStorage.getItem('scrollPosition');
-            return savedPosition ? `calc(100vh - ${savedPosition}px)` : '100vh';
-          })() : '0px',
+          bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
