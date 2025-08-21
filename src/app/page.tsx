@@ -168,11 +168,7 @@ export default function Home() {
           email,
           password,
           options: {
-<<<<<<< HEAD
             emailRedirectTo: `${window.location.origin}${window.location.pathname}`
-=======
-            emailRedirectTo: window.location.origin
->>>>>>> 4d6e7b80e33b70c52b90140982ce0797470c068e
           }
         });
         
@@ -550,11 +546,7 @@ export default function Home() {
             onClick={() => supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
-<<<<<<< HEAD
                 redirectTo: `${window.location.origin}${window.location.pathname}`
-=======
-                redirectTo: window.location.origin
->>>>>>> 4d6e7b80e33b70c52b90140982ce0797470c068e
               }
             })}
             style={{
