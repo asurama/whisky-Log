@@ -1,0 +1,1446 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { read, utils, write } from 'xlsx'
+import { importData as importDataUtil } from "@/utils/importData"
+import { saveAs } from 'file-saver'
+
+export default function Home() {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLogin, setIsLogin] = useState(true)
+  const [authLoading, setAuthLoading] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [bottles, setBottles] = useState<any[]>([])
+  const [brands, setBrands] = useState<any[]>([])
+  const [loadingBottles, setLoadingBottles] = useState(true)
+  const [showTastingModal, setShowTastingModal] = useState(false)
+  const [selectedBottle, setSelectedBottle] = useState<any>(null)
+  const [showTastingHistoryModal, setShowTastingHistoryModal] = useState(false)
+  const [tastingHistory, setTastingHistory] = useState<any[]>([])
+  const [loadingTastingHistory, setLoadingTastingHistory] = useState(false)
+  const [showAllTastings, setShowAllTastings] = useState(false)
+  const [allTastings, setAllTastings] = useState<any[]>([])
+  const [loadingAllTastings, setLoadingAllTastings] = useState(false)
+  const [showStats, setShowStats] = useState(false)
+  const [stats, setStats] = useState<any>({})
+  const [loadingStats, setLoadingStats] = useState(false)
+  const [currentTab, setCurrentTab] = useState<'collection' | 'tastings' | 'stats' | 'wishlist'>('collection')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [filteredBottles, setFilteredBottles] = useState<any[]>([])
+  const [priceRangeFilter, setPriceRangeFilter] = useState('')
+  const [brandFilter, setBrandFilter] = useState('')
+  const [ratingFilter, setRatingFilter] = useState('')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [showEditBottleModal, setShowEditBottleModal] = useState(false)
+  const [editingBottle, setEditingBottle] = useState<any>(null)
+  const [showEditTastingModal, setShowEditTastingModal] = useState(false)
+  const [editingTasting, setEditingTasting] = useState<any>(null)
+  const [chartData, setChartData] = useState<any>({})
+
+  // 이미지 업로드 관련 상태
+  const [showImageModal, setShowImageModal] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [currentBottleImage, setCurrentBottleImage] = useState<string | null>(null)
+
+  // 위스키 추가 폼 상태
+  const [newBottle, setNewBottle] = useState({
+    name: '',
+    brand_id: '',
+    custom_brand: '',
+    vintage: '',
+    age_years: '',
+    retail_price: '',
+    purchase_price: '',
+    discount_rate: '',
+    purchase_location: '',
+    purchase_date: '',
+    status: 'unopened',
+    total_volume_ml: '750', // 기본값 750ml
+    remaining_volume_ml: '750',
+    notes: '',
+    image_url: '',
+    abv: '' // 도수 필드 추가
+  })
+
+  // 할인율 자동 계산
+  const calculateDiscount = () => {
+    const retail = parseFloat(newBottle.retail_price) || 0
+    const purchase = parseFloat(newBottle.purchase_price) || 0
+    
+    if (retail > 0 && purchase > 0) {
+      const discount = ((retail - purchase) / retail) * 100
+      setNewBottle(prev => ({
+        ...prev,
+        discount_rate: discount.toFixed(2)
+      }))
+    }
+  }
+
+  // 시중가격이나 구매가격이 변경될 때 할인율 자동 계산
+  useEffect(() => {
+    if (newBottle.retail_price && newBottle.purchase_price) {
+      calculateDiscount()
+    }
+  }, [newBottle.retail_price, newBottle.purchase_price])
+
+  // 시음 폼 상태
+  const [newTasting, setNewTasting] = useState({
+    tasting_type: 'bottle',
+    bottle_id: '',
+    tasting_date: '',
+    tasting_time: '',
+    location: '',
+    consumed_volume_ml: '',
+    nose_rating: '',
+    palate_rating: '',
+    finish_rating: '',
+    overall_rating: '',
+    nose_notes: '',
+    palate_notes: '',
+    finish_notes: '',
+    additional_notes: '',
+    companions: '',
+    bottle_name: '', // 바/모임용 보틀 정보
+    bottle_brand: '', // 바/모임용 보틀 정보
+    bottle_vintage: '', // 바/모임용 보틀 정보
+    bottle_age: '' // 바/모임용 보틀 정보
+  })
+
+  useEffect(() => {
+    // 현재 사용자 세션 확인
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user ?? null)
+      setLoading(false)
+    }
+
+    checkUser()
+
+    // 인증 상태 변경 리스너
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // 브랜드 목록 가져오기
+  useEffect(() => {
+    if (user) {
+      fetchBrands()
+      fetchBottles()
+      fetchAllTastings()
+      fetchStats()
+      fetchWishlist()
+    }
+  }, [user])
+
+  // 검색 및 필터링 실행
+  useEffect(() => {
+    filterBottles()
+  }, [searchTerm, statusFilter, priceRangeFilter, brandFilter, bottles])
+
+  const fetchBrands = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('brands')
+        .select('*')
+        .order('name')
+      
+      if (error) throw error
+      setBrands(data || [])
+    } catch (error) {
+      console.error('브랜드 로딩 오류:', error)
+    }
+  }
+
+  const fetchBottles = async () => {
+    try {
+      setLoadingBottles(true)
+      const { data, error } = await supabase
+        .from('bottles')
+        .select(`
+          *,
+          brands (name)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setBottles(data || [])
+      setFilteredBottles(data || [])
+    } catch (error) {
+      console.error('위스키 로딩 오류:', error)
+    } finally {
+      setLoadingBottles(false)
+    }
+  }
+
+  const filterBottles = () => {
+    let filtered = bottles
+
+    // 검색어 필터링
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(bottle => 
+        bottle.name.toLowerCase().includes(term) ||
+        (bottle.brands?.name && bottle.brands.name.toLowerCase().includes(term)) ||
+        (bottle.custom_brand && bottle.custom_brand.toLowerCase().includes(term))
+      )
+    }
+
+    // 상태 필터링
+    if (statusFilter) {
+      filtered = filtered.filter(bottle => bottle.bottle_status === statusFilter)
+    }
+
+    // 브랜드 필터링
+    if (brandFilter) {
+      filtered = filtered.filter(bottle => 
+        (bottle.brands?.name && bottle.brands.name === brandFilter) ||
+        (bottle.custom_brand && bottle.custom_brand === brandFilter)
+      )
+    }
+
+    // 가격대 필터링
+    if (priceRangeFilter) {
+      filtered = filtered.filter(bottle => {
+        const price = bottle.purchase_price || bottle.retail_price || 0
+        switch (priceRangeFilter) {
+          case 'under50k':
+            return price < 50000
+          case '50k-100k':
+            return price >= 50000 && price < 100000
+          case '100k-200k':
+            return price >= 100000 && price < 200000
+          case '200k-500k':
+            return price >= 200000 && price < 500000
+          case 'over500k':
+            return price >= 500000
+          default:
+            return true
+        }
+      })
+    }
+
+    setFilteredBottles(filtered)
+  }
+
+  const fetchTastingHistory = async (bottleId: string) => {
+    try {
+      setLoadingTastingHistory(true)
+      const { data, error } = await supabase
+        .from('tastings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('bottle_id', bottleId)
+        .order('tasting_date', { ascending: false })
+      
+      if (error) throw error
+      setTastingHistory(data || [])
+    } catch (error) {
+      console.error('시음 기록 로딩 오류:', error)
+    } finally {
+      setLoadingTastingHistory(false)
+    }
+  }
+
+  const fetchAllTastings = async () => {
+    try {
+      setLoadingAllTastings(true)
+      const { data, error } = await supabase
+        .from('tastings')
+        .select(`
+          *,
+          bottles (
+            name,
+            custom_brand,
+            vintage,
+            age_years,
+            brands (name)
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('tasting_date', { ascending: false })
+      
+      if (error) throw error
+      setAllTastings(data || [])
+    } catch (error) {
+      console.error('전체 시음 기록 로딩 오류:', error)
+    } finally {
+      setLoadingAllTastings(false)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      setLoadingStats(true)
+      
+      // 위스키 통계
+      const { data: bottlesData, error: bottlesError } = await supabase
+        .from('bottles')
+        .select('*')
+        .eq('user_id', user.id)
+      
+      if (bottlesError) throw bottlesError
+      
+      // 시음 통계
+      const { data: tastingsData, error: tastingsError } = await supabase
+        .from('tastings')
+        .select('*')
+        .eq('user_id', user.id)
+      
+      if (tastingsError) throw tastingsError
+      
+      // 브랜드별 통계
+      const { data: brandsData, error: brandsError } = await supabase
+        .from('brands')
+        .select('*')
+      
+      if (brandsError) throw brandsError
+      
+      // 통계 계산
+      const totalBottles = bottlesData?.length || 0
+      const openedBottles = bottlesData?.filter(b => b.bottle_status === 'opened').length || 0
+      const unopenedBottles = totalBottles - openedBottles
+      const totalTastings = tastingsData?.length || 0
+      const totalValue = bottlesData?.reduce((sum, b) => sum + (b.purchase_price || 0), 0) || 0
+      const avgRating = tastingsData?.length > 0 
+        ? tastingsData.reduce((sum, t) => sum + (t.overall_rating || 0), 0) / tastingsData.length 
+        : 0
+      
+      // 소비량 통계
+      const totalConsumed = tastingsData?.reduce((sum, t) => sum + (t.consumed_volume_ml || 0), 0) || 0
+      const totalVolume = bottlesData?.reduce((sum, b) => sum + (b.total_volume_ml || 0), 0) || 0
+      const remainingVolume = bottlesData?.reduce((sum, b) => sum + (b.remaining_volume_ml || 0), 0) || 0
+      const consumptionRate = totalVolume > 0 ? ((totalVolume - remainingVolume) / totalVolume) * 100 : 0
+      
+      // 시음 타입별 통계
+      const barTastings = tastingsData?.filter(t => t.tasting_type === 'bar').length || 0
+      const meetingTastings = tastingsData?.filter(t => t.tasting_type === 'meeting').length || 0
+      const bottleTastings = tastingsData?.filter(t => t.tasting_type === 'bottle').length || 0
+      
+      setStats({
+        totalBottles,
+        openedBottles,
+        unopenedBottles,
+        totalTastings,
+        totalValue,
+        avgRating,
+        totalConsumed,
+        totalVolume,
+        remainingVolume,
+        consumptionRate,
+        barTastings,
+        meetingTastings,
+        bottleTastings,
+        brands: brandsData || []
+      })
+
+      // 차트 데이터 생성
+      const brandStats = bottlesData?.reduce((acc: any, bottle: any) => {
+        const brandName = bottle.brands?.name || bottle.custom_brand || '기타'
+        acc[brandName] = (acc[brandName] || 0) + 1
+        return acc
+      }, {})
+
+      const brandChartData = Object.entries(brandStats || {}).map(([name, value]) => ({
+        name,
+        value
+      }))
+
+      const tastingTypeData = [
+        { name: '바', value: barTastings, color: '#7c3aed' },
+        { name: '모임', value: meetingTastings, color: '#059669' },
+        { name: '구매한 보틀', value: bottleTastings, color: '#f59e0b' }
+      ]
+
+      const priceRangeData = bottlesData?.reduce((acc: any, bottle: any) => {
+        const price = bottle.purchase_price || bottle.retail_price || 0
+        let range = '기타'
+        if (price < 50000) range = '5만원 미만'
+        else if (price < 100000) range = '5만원-10만원'
+        else if (price < 200000) range = '10만원-20만원'
+        else if (price < 500000) range = '20만원-50만원'
+        else range = '50만원 이상'
+        
+        acc[range] = (acc[range] || 0) + 1
+        return acc
+      }, {})
+
+      const priceChartData = Object.entries(priceRangeData || {}).map(([name, value]) => ({
+        name,
+        value
+      }))
+
+      setChartData({
+        brandChartData,
+        tastingTypeData,
+        priceChartData
+      })
+    } catch (error) {
+      console.error('통계 로딩 오류:', error)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAuthLoading(true)
+
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        })
+        if (error) throw error
+      }
+    } catch (error) {
+      console.error('Auth error:', error)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleAddBottle = async (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('위스키 추가 시작:', newBottle)
+    
+    try {
+      // 필수 필드 검증
+      if (!newBottle.name) {
+        alert('위스키 이름을 입력해주세요.')
+        return
+      }
+      
+      if (!newBottle.brand_id && !newBottle.custom_brand) {
+        alert('브랜드를 선택하거나 직접 입력해주세요.')
+        return
+      }
+      
+      const bottleData = {
+        user_id: user.id,
+        name: newBottle.name,
+        brand_id: newBottle.brand_id || null,
+        custom_brand: newBottle.custom_brand || null,
+        vintage: newBottle.vintage ? parseInt(newBottle.vintage) : null,
+        age_years: newBottle.age_years ? parseInt(newBottle.age_years) : null,
+        retail_price: newBottle.retail_price ? parseFloat(newBottle.retail_price) : null,
+        purchase_price: newBottle.purchase_price ? parseFloat(newBottle.purchase_price) : null,
+        discount_rate: newBottle.discount_rate ? parseFloat(newBottle.discount_rate) : null,
+        purchase_location: newBottle.purchase_location || null,
+        purchase_date: newBottle.purchase_date || null,
+        total_volume_ml: newBottle.total_volume_ml ? parseFloat(newBottle.total_volume_ml) : null,
+        remaining_volume_ml: newBottle.total_volume_ml ? parseFloat(newBottle.total_volume_ml) : null,
+        notes: newBottle.notes || null,
+        image_url: currentBottleImage || null,
+        abv: newBottle.abv || ''
+      }
+      
+      console.log('전송할 데이터:', bottleData)
+      
+      if (editingBottle) {
+        // 수정 모드
+        const { data, error } = await supabase
+          .from('bottles')
+          .update(bottleData)
+          .eq('id', editingBottle.id)
+          .select()
+        
+        if (error) {
+          console.error('Supabase 오류:', error)
+          alert(`위스키 수정 실패: ${error.message}`)
+          throw error
+        }
+        
+        console.log('위스키 수정 성공:', data)
+        alert('위스키가 성공적으로 수정되었습니다!')
+      } else {
+        // 추가 모드
+        const { data, error } = await supabase
+          .from('bottles')
+          .insert(bottleData)
+          .select()
+        
+        if (error) {
+          console.error('Supabase 오류:', error)
+          alert(`위스키 추가 실패: ${error.message}`)
+          throw error
+        }
+        
+        console.log('위스키 추가 성공:', data)
+        alert('위스키가 성공적으로 추가되었습니다!')
+      }
+      
+      // 폼 초기화 및 모달 닫기
+      setNewBottle({
+        name: '',
+        brand_id: '',
+        custom_brand: '',
+        vintage: '',
+        age_years: '',
+        retail_price: '',
+        purchase_price: '',
+        discount_rate: '',
+        purchase_location: '',
+        purchase_date: '',
+        status: 'unopened',
+        total_volume_ml: '750',
+        remaining_volume_ml: '750',
+        notes: '',
+        image_url: '',
+        abv: ''
+      })
+      setEditingBottle(null)
+      setShowAddModal(false)
+      
+      // 목록 새로고침
+      fetchBottles()
+    } catch (error) {
+      console.error('위스키 추가/수정 오류:', error)
+      alert('위스키 추가/수정 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleAddTasting = async (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('시음 추가 시작:', newTasting)
+    
+    try {
+      // 필수 필드 검증
+      if (!newTasting.tasting_type) {
+        alert('시음 타입을 선택해주세요.')
+        return
+      }
+      
+      if (newTasting.tasting_type === 'bottle' && !newTasting.bottle_id) {
+        alert('보틀을 선택해주세요.')
+        return
+      }
+      
+      if (!newTasting.location) {
+        alert('장소를 입력해주세요.')
+        return
+      }
+      
+      const tastingData = {
+        user_id: user.id,
+        bottle_id: newTasting.tasting_type === 'bottle' ? newTasting.bottle_id : null,
+        tasting_type: newTasting.tasting_type,
+        tasting_date: newTasting.tasting_date || new Date().toISOString().split('T')[0],
+        tasting_time: newTasting.tasting_time || null,
+        location: newTasting.location,
+        consumed_volume_ml: newTasting.consumed_volume_ml ? parseFloat(newTasting.consumed_volume_ml) : null,
+        nose_rating: newTasting.nose_rating ? parseFloat(newTasting.nose_rating) : null,
+        palate_rating: newTasting.palate_rating ? parseFloat(newTasting.palate_rating) : null,
+        finish_rating: newTasting.finish_rating ? parseFloat(newTasting.finish_rating) : null,
+        overall_rating: newTasting.overall_rating ? parseFloat(newTasting.overall_rating) : null,
+        nose_notes: newTasting.nose_notes || null,
+        palate_notes: newTasting.palate_notes || null,
+        finish_notes: newTasting.finish_notes || null,
+        additional_notes: newTasting.additional_notes || null,
+        companions: newTasting.companions || null
+      }
+      
+      console.log('전송할 시음 데이터:', tastingData)
+      
+      if (editingTasting) {
+        // 수정 모드
+        const { data, error } = await supabase
+          .from('tastings')
+          .update(tastingData)
+          .eq('id', editingTasting.id)
+          .select()
+        
+        if (error) {
+          console.error('Supabase 오류:', error)
+          alert(`시음 기록 수정 실패: ${error.message}`)
+          throw error
+        }
+        
+        console.log('시음 기록 수정 성공:', data)
+        alert('시음 기록이 성공적으로 수정되었습니다!')
+      } else {
+        // 추가 모드
+        const { data, error } = await supabase
+          .from('tastings')
+          .insert(tastingData)
+          .select()
+        
+        if (error) {
+          console.error('Supabase 오류:', error)
+          alert(`시음 기록 추가 실패: ${error.message}`)
+          throw error
+        }
+        
+        console.log('시음 기록 추가 성공:', data)
+        alert('시음 기록이 성공적으로 추가되었습니다!')
+      }
+      
+      // 폼 초기화 및 모달 닫기
+      setNewTasting({
+        tasting_type: 'bottle',
+        bottle_id: '',
+        tasting_date: '',
+        tasting_time: '',
+        location: '',
+        consumed_volume_ml: '',
+        nose_rating: '',
+        palate_rating: '',
+        finish_rating: '',
+        overall_rating: '',
+        nose_notes: '',
+        palate_notes: '',
+        finish_notes: '',
+        additional_notes: '',
+        companions: '',
+        bottle_name: '',
+        bottle_brand: '',
+        bottle_vintage: '',
+        bottle_age: ''
+      })
+      setEditingTasting(null)
+      setShowTastingModal(false)
+      setSelectedBottle(null)
+      
+      // 목록 새로고침
+      fetchBottles()
+      if (currentTab === 'tastings') {
+        fetchAllTastings()
+      }
+    } catch (error) {
+      console.error('시음 기록 추가/수정 오류:', error)
+      alert('시음 기록 추가/수정 중 오류가 발생했습니다.')
+    }
+  }
+
+  const openTastingModal = (bottle: any) => {
+    setSelectedBottle(bottle)
+    setNewTasting({
+      ...newTasting,
+      tasting_type: 'bottle',
+      bottle_id: bottle.id
+    })
+    setShowTastingModal(true)
+  }
+
+  const openTastingModalFromHeader = () => {
+    setSelectedBottle(null)
+    setNewTasting({
+      tasting_type: 'meeting',
+      bottle_id: '',
+      tasting_date: '',
+      tasting_time: '',
+      location: '',
+      consumed_volume_ml: '',
+      nose_rating: '',
+      palate_rating: '',
+      finish_rating: '',
+      overall_rating: '',
+      nose_notes: '',
+      palate_notes: '',
+      finish_notes: '',
+      additional_notes: '',
+      companions: '',
+      bottle_name: '',
+      bottle_brand: '',
+      bottle_vintage: '',
+      bottle_age: ''
+    })
+    setShowTastingModal(true)
+  }
+
+  const openTastingHistoryModal = async (bottle: any) => {
+    setSelectedBottle(bottle)
+    await fetchTastingHistory(bottle.id)
+    setShowTastingHistoryModal(true)
+  }
+
+  const openAllTastings = async () => {
+    setShowAllTastings(true)
+    await fetchAllTastings()
+  }
+
+  const openStats = async () => {
+    setCurrentTab('stats')
+    await fetchStats()
+  }
+
+  const openTastingsTab = async () => {
+    setCurrentTab('tastings')
+    await fetchAllTastings()
+  }
+
+  const openEditBottleModal = (bottle: any) => {
+    setEditingBottle(bottle)
+    setNewBottle({
+      name: bottle.name,
+      brand_id: bottle.brand_id || 'custom',
+      custom_brand: bottle.custom_brand || '',
+      vintage: bottle.vintage?.toString() || '',
+      age_years: bottle.age_years?.toString() || '',
+      retail_price: bottle.retail_price?.toString() || '',
+      purchase_price: bottle.purchase_price?.toString() || '',
+      discount_rate: bottle.discount_rate?.toString() || '',
+      purchase_location: bottle.purchase_location || '',
+      purchase_date: bottle.purchase_date || '',
+      status: bottle.bottle_status === 'opened' ? 'unopened' : 'opened',
+      total_volume_ml: bottle.total_volume_ml?.toString() || '',
+      notes: bottle.notes || '',
+      image_url: bottle.image_url || '',
+      abv: bottle.abv || ''
+    })
+    setShowAddModal(true)
+  }
+
+  const handleEditBottle = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const { error } = await supabase
+        .from('bottles')
+        .update({
+          name: editingBottle.name,
+          brand_id: editingBottle.brand_id === 'custom' ? null : editingBottle.brand_id,
+          custom_brand: editingBottle.brand_id === 'custom' ? editingBottle.custom_brand : null,
+          vintage: editingBottle.vintage ? parseInt(editingBottle.vintage) : null,
+          age_years: editingBottle.age_years ? parseInt(editingBottle.age_years) : null,
+          retail_price: editingBottle.retail_price ? parseFloat(editingBottle.retail_price) : null,
+          purchase_price: editingBottle.purchase_price ? parseFloat(editingBottle.purchase_price) : null,
+          discount_rate: editingBottle.discount_rate ? parseFloat(editingBottle.discount_rate) : null,
+          purchase_location: editingBottle.purchase_location || null,
+          purchase_date: editingBottle.purchase_date || null,
+          total_volume_ml: editingBottle.total_volume_ml ? parseInt(editingBottle.total_volume_ml) : null,
+          notes: editingBottle.notes || null,
+          abv: editingBottle.abv || ''
+        })
+        .eq('id', editingBottle.id)
+      
+      if (error) throw error
+      
+      setShowEditBottleModal(false)
+      setEditingBottle(null)
+      fetchBottles()
+      alert('위스키가 성공적으로 수정되었습니다!')
+    } catch (error) {
+      console.error('위스키 수정 오류:', error)
+      alert('위스키 수정 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleDeleteBottle = async (bottleId: string) => {
+    if (!confirm('정말로 이 위스키를 삭제하시겠습니까?')) return
+    
+    try {
+      const { error } = await supabase
+        .from('bottles')
+        .delete()
+        .eq('id', bottleId)
+      
+      if (error) throw error
+      
+      fetchBottles()
+      alert('위스키가 성공적으로 삭제되었습니다!')
+    } catch (error) {
+      console.error('위스키 삭제 오류:', error)
+      alert('위스키 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  const openEditTastingModal = (tasting: any) => {
+    setEditingTasting(tasting)
+    setNewTasting({
+      tasting_type: tasting.tasting_type,
+      bottle_id: tasting.bottle_id || '',
+      tasting_date: tasting.tasting_date?.split('T')[0] || '',
+      tasting_time: tasting.tasting_time || '',
+      location: tasting.location || '',
+      consumed_volume_ml: tasting.consumed_volume_ml?.toString() || '',
+      nose_rating: tasting.nose_rating?.toString() || '',
+      palate_rating: tasting.palate_rating?.toString() || '',
+      finish_rating: tasting.finish_rating?.toString() || '',
+      overall_rating: tasting.overall_rating?.toString() || '',
+      nose_notes: tasting.nose_notes || '',
+      palate_notes: tasting.palate_notes || '',
+      finish_notes: tasting.finish_notes || '',
+      additional_notes: tasting.additional_notes || '',
+      companions: tasting.companions || '',
+      bottle_name: tasting.bottle_name || '',
+      bottle_brand: tasting.bottle_brand || '',
+      bottle_vintage: tasting.bottle_vintage?.toString() || '',
+      bottle_age: tasting.bottle_age?.toString() || ''
+    })
+    setShowTastingModal(true)
+  }
+
+  const handleEditTasting = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const { error } = await supabase
+        .from('tastings')
+        .update({
+          bottle_id: editingTasting.tasting_type === 'bottle' ? editingTasting.bottle_id : null,
+          tasting_type: editingTasting.tasting_type,
+          tasting_date: editingTasting.tasting_date,
+          tasting_time: editingTasting.tasting_time || null,
+          location: editingTasting.location,
+          consumed_volume_ml: editingTasting.consumed_volume_ml ? parseFloat(editingTasting.consumed_volume_ml) : null,
+          nose_rating: editingTasting.nose_rating ? parseFloat(editingTasting.nose_rating) : null,
+          palate_rating: editingTasting.palate_rating ? parseFloat(editingTasting.palate_rating) : null,
+          finish_rating: editingTasting.finish_rating ? parseFloat(editingTasting.finish_rating) : null,
+          overall_rating: editingTasting.overall_rating ? parseFloat(editingTasting.overall_rating) : null,
+          nose_notes: editingTasting.nose_notes || null,
+          palate_notes: editingTasting.palate_notes || null,
+          finish_notes: editingTasting.finish_notes || null,
+          additional_notes: editingTasting.additional_notes || null,
+          companions: editingTasting.companions || null
+        })
+        .eq('id', editingTasting.id)
+      
+      if (error) throw error
+      
+      setShowEditTastingModal(false)
+      setEditingTasting(null)
+      fetchAllTastings()
+      alert('시음 기록이 성공적으로 수정되었습니다!')
+    } catch (error) {
+      console.error('시음 기록 수정 오류:', error)
+      alert('시음 기록 수정 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleDeleteTasting = async (tastingId: string) => {
+    if (!confirm('정말로 이 시음 기록을 삭제하시겠습니까?')) return
+    
+    try {
+      const { error } = await supabase
+        .from('tastings')
+        .delete()
+        .eq('id', tastingId)
+      
+      if (error) {
+        console.error('Supabase 오류:', error)
+        alert(`시음 기록 삭제 실패: ${error.message}`)
+        return
+      }
+      
+      alert('시음 기록이 성공적으로 삭제되었습니다!')
+      fetchBottles()
+      if (currentTab === 'tastings') {
+        fetchAllTastings()
+      }
+    } catch (error) {
+      console.error('시음 기록 삭제 오류:', error)
+      alert('시음 기록 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  // 이미지 업로드 관련 함수들
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // 파일 크기 체크 (5MB 제한)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('이미지 크기는 5MB 이하여야 합니다.')
+        return
+      }
+      
+      // 파일 타입 체크
+      if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드 가능합니다.')
+        return
+      }
+      
+      setSelectedImage(file)
+      
+      // 미리보기 생성
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!selectedImage || !user) return null
+    
+    setUploadingImage(true)
+    
+    try {
+      const fileExt = selectedImage.name.split('.').pop()
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`
+      
+      const { data, error } = await supabase.storage
+        .from('whisky-bottles')
+        .upload(fileName, selectedImage, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (error) {
+        console.error('이미지 업로드 오류:', error)
+        alert(`이미지 업로드 실패: ${error.message}`)
+        return null
+      }
+      
+      // 공개 URL 생성
+      const { data: { publicUrl } } = supabase.storage
+        .from('whisky-bottles')
+        .getPublicUrl(fileName)
+      
+      return publicUrl
+    } catch (error) {
+      console.error('이미지 업로드 오류:', error)
+      alert('이미지 업로드 중 오류가 발생했습니다.')
+      return null
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const openImageModal = () => {
+    setShowImageModal(true)
+    setSelectedImage(null)
+    setImagePreview(null)
+  }
+
+  const closeImageModal = () => {
+    setShowImageModal(false)
+    setSelectedImage(null)
+    setImagePreview(null)
+    setCurrentBottleImage(null)
+  }
+
+  const handleImageUpload = async () => {
+    if (!selectedImage) {
+      alert('이미지를 선택해주세요.')
+      return
+    }
+    
+    const imageUrl = await uploadImage()
+    if (imageUrl) {
+      setCurrentBottleImage(imageUrl)
+      closeImageModal()
+      setShowAddModal(true)
+    }
+  }
+
+  // 위시리스트 관련 상태
+  const [wishlist, setWishlist] = useState<any[]>([])
+  const [loadingWishlist, setLoadingWishlist] = useState(false)
+  const [showWishlistModal, setShowWishlistModal] = useState(false)
+  const [editingWishlistItem, setEditingWishlistItem] = useState<any>(null)
+  const [newWishlistItem, setNewWishlistItem] = useState({
+    name: '',
+    brand_id: '',
+    custom_brand: '',
+    vintage: '',
+    age_years: '',
+    retail_price: '',
+    volume_ml: '750', // 기본값 750ml
+    location: '',
+    notes: '',
+    priority: 'medium',
+    abv: '' // 도수 필드 추가
+  })
+
+  // 위시리스트 관련 함수들
+  const fetchWishlist = async () => {
+    if (!user) return
+    
+    setLoadingWishlist(true)
+    try {
+      const { data, error } = await supabase
+        .from('wishlist')
+        .select(`
+          *,
+          brands(name)
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'wishlist')
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('위시리스트 로드 오류:', error)
+        return
+      }
+      
+      setWishlist(data || [])
+    } catch (error) {
+      console.error('위시리스트 로드 오류:', error)
+    } finally {
+      setLoadingWishlist(false)
+    }
+  }
+
+  const handleAddWishlistItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+    
+    try {
+      const wishlistData = {
+        user_id: user.id,
+        name: newWishlistItem.name,
+        brand_id: newWishlistItem.brand_id === 'custom' ? null : (newWishlistItem.brand_id || null),
+        custom_brand: newWishlistItem.custom_brand || null,
+        vintage: newWishlistItem.vintage ? parseInt(newWishlistItem.vintage) : null,
+        age_years: newWishlistItem.age_years ? parseInt(newWishlistItem.age_years) : null,
+        retail_price: newWishlistItem.retail_price ? parseFloat(newWishlistItem.retail_price) : null,
+        total_volume_ml: newWishlistItem.total_volume_ml ? parseFloat(newWishlistItem.total_volume_ml) : null,
+        purchase_location: newWishlistItem.purchase_location || null,
+        priority: newWishlistItem.priority,
+        notes: newWishlistItem.notes || null,
+        abv: newWishlistItem.abv || ''
+      }
+      
+      const { error } = await supabase
+        .from('wishlist')
+        .insert(wishlistData)
+      
+      if (error) {
+        console.error('위시리스트 추가 오류:', error)
+        alert('위시리스트 추가 실패')
+        return
+      }
+      
+      setShowWishlistModal(false)
+      resetWishlistForm()
+      fetchWishlist()
+      alert('위시리스트에 추가되었습니다!')
+    } catch (error) {
+      console.error('위시리스트 추가 오류:', error)
+      alert('위시리스트 추가 실패')
+    }
+  }
+
+  const handleEditWishlistItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !editingWishlistItem) return
+    
+    try {
+      const wishlistData = {
+        name: newWishlistItem.name,
+        brand_id: newWishlistItem.brand_id === 'custom' ? null : (newWishlistItem.brand_id || null),
+        custom_brand: newWishlistItem.custom_brand || null,
+        vintage: newWishlistItem.vintage ? parseInt(newWishlistItem.vintage) : null,
+        age_years: newWishlistItem.age_years ? parseInt(newWishlistItem.age_years) : null,
+        retail_price: newWishlistItem.retail_price ? parseFloat(newWishlistItem.retail_price) : null,
+        total_volume_ml: newWishlistItem.total_volume_ml ? parseFloat(newWishlistItem.total_volume_ml) : null,
+        purchase_location: newWishlistItem.purchase_location || null,
+        priority: newWishlistItem.priority,
+        notes: newWishlistItem.notes || null,
+        abv: newWishlistItem.abv || ''
+      }
+      
+      const { error } = await supabase
+        .from('wishlist')
+        .update(wishlistData)
+        .eq('id', editingWishlistItem.id)
+      
+      if (error) {
+        console.error('위시리스트 수정 오류:', error)
+        alert('위시리스트 수정 실패')
+        return
+      }
+      
+      setShowWishlistModal(false)
+      setEditingWishlistItem(null)
+      resetWishlistForm()
+      fetchWishlist()
+      alert('위시리스트가 수정되었습니다!')
+    } catch (error) {
+      console.error('위시리스트 수정 오류:', error)
+      alert('위시리스트 수정 실패')
+    }
+  }
+
+  const handleDeleteWishlistItem = async (itemId: string) => {
+    if (!confirm('정말로 이 항목을 삭제하시겠습니까?')) return
+    
+    try {
+      const { error } = await supabase
+        .from('wishlist')
+        .delete()
+        .eq('id', itemId)
+      
+      if (error) {
+        console.error('위시리스트 삭제 오류:', error)
+        alert('위시리스트 삭제에 실패했습니다.')
+        return
+      }
+      
+      alert('위시리스트에서 삭제되었습니다!')
+      fetchWishlist()
+    } catch (error) {
+      console.error('위시리스트 삭제 오류:', error)
+      alert('위시리스트 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleMoveToBottles = async (itemId: string) => {
+    // 해당 아이템을 찾아서 구매 완료 모달 열기
+    const item = wishlist.find(w => w.id === itemId)
+    if (item) {
+      openPurchaseModal(item)
+    }
+  }
+
+  const resetWishlistForm = () => {
+    setNewWishlistItem({
+      name: '',
+      brand_id: '',
+      custom_brand: '',
+      vintage: '',
+      age_years: '',
+      retail_price: '',
+      volume_ml: '750', // 기본값 750ml
+      location: '',
+      notes: '',
+      priority: 'medium',
+      abv: '' // 도수 필드 추가
+    })
+  }
+
+  const openWishlistModal = () => {
+    setEditingWishlistItem(null)
+    resetWishlistForm()
+    setShowWishlistModal(true)
+  }
+
+  const openEditWishlistModal = (item: any) => {
+    setEditingWishlistItem(item)
+    setNewWishlistItem({
+      name: item.name,
+      brand_id: item.custom_brand ? 'custom' : (item.brand_id || ''),
+      custom_brand: item.custom_brand || '',
+      vintage: item.vintage?.toString() || '',
+      age_years: item.age_years?.toString() || '',
+      retail_price: item.retail_price?.toString() || '',
+      volume_ml: item.total_volume_ml?.toString() || '',
+      priority: item.priority,
+      notes: item.notes || '',
+      abv: item.abv || ''
+    })
+    setShowWishlistModal(true)
+  }
+
+  // 구매 완료 모달 관련 상태
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+  const [purchasingItem, setPurchasingItem] = useState<any>(null)
+  const [purchaseData, setPurchaseData] = useState({
+    purchase_price: '',
+    purchase_date: '',
+    purchase_location: ''
+  })
+
+  const openPurchaseModal = (item: any) => {
+    setPurchasingItem(item)
+    setPurchaseData({
+      purchase_price: '',
+      purchase_date: '',
+      purchase_location: ''
+    })
+    setShowPurchaseModal(true)
+  }
+
+  const handlePurchaseComplete = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !purchasingItem) return
+    
+    try {
+      // 위시리스트 아이템을 bottles 테이블로 이동
+      const bottleData = {
+        user_id: user.id,
+        name: purchasingItem.name,
+        brand_id: purchasingItem.brand_id,
+        custom_brand: purchasingItem.custom_brand,
+        vintage: purchasingItem.vintage,
+        age_years: purchasingItem.age_years,
+        retail_price: purchasingItem.retail_price,
+        purchase_price: purchaseData.purchase_price ? parseFloat(purchaseData.purchase_price) : null,
+        purchase_location: purchaseData.purchase_location || purchasingItem.purchase_location,
+        purchase_date: purchaseData.purchase_date || null,
+        total_volume_ml: purchasingItem.total_volume_ml,
+        bottle_status: 'unopened',
+        notes: purchasingItem.notes
+      }
+      
+      const { data: newBottle, error: bottleError } = await supabase
+        .from('bottles')
+        .insert(bottleData)
+        .select()
+        .single()
+      
+      if (bottleError) {
+        console.error('보틀 추가 오류:', bottleError)
+        alert('구매 완료 처리 실패')
+        return
+      }
+      
+      // 위시리스트에서 삭제
+      const { error: deleteError } = await supabase
+        .from('wishlist')
+        .delete()
+        .eq('id', purchasingItem.id)
+      
+      if (deleteError) {
+        console.error('위시리스트 삭제 오류:', deleteError)
+        alert('위시리스트 삭제 실패')
+        return
+      }
+      
+      setShowPurchaseModal(false)
+      setPurchasingItem(null)
+      setPurchaseData({
+        purchase_price: '',
+        purchase_date: '',
+        purchase_location: ''
+      })
+      
+      fetchWishlist()
+      fetchBottles()
+      alert('구매 완료! 위스키 컬렉션에 추가되었습니다.')
+    } catch (error) {
+      console.error('구매 완료 처리 오류:', error)
+      alert('구매 완료 처리 실패')
+    }
+  }
+
+  // 데이터 내보내기/가져오기 상태
+  const [importingData, setImportingData] = useState(false)
+  const [exportingData, setExportingData] = useState(false)
+
+  // 데이터 내보내기 함수
+  const exportData = async () => {
+    setExportingData(true)
+    try {
+      // 위스키 데이터 준비
+      const bottlesData = bottles.map(bottle => ({
+        '위스키명': bottle.name,
+        '브랜드': bottle.brands?.name || bottle.custom_brand || '',
+        '빈티지': bottle.vintage || '',
+        '숙성연수': bottle.age_years || '',
+        '시중가': bottle.retail_price || '',
+        '구매가': bottle.purchase_price || '',
+        '할인율': bottle.discount_rate || '',
+        '구매장소': bottle.purchase_location || '',
+        '구매일': bottle.purchase_date || '',
+        '용량(ml)': bottle.total_volume_ml || '',
+        '남은용량(ml)': bottle.remaining_volume_ml || '',
+        '상태': bottle.bottle_status === 'opened' ? '오픈' : '미오픈',
+        '메모': bottle.notes || ''
+      }))
+
+      // 시음 데이터 준비
+      const tastingsData = allTastings.map(tasting => ({
+        '위스키명': tasting.bottles?.name || tasting.bottle_name || '',
+        '브랜드': tasting.bottles?.brands?.name || tasting.bottles?.custom_brand || tasting.bottle_brand || '',
+        '시음일': tasting.tasting_date || '',
+        '시음시간': tasting.tasting_time || '',
+        '장소': tasting.location || '',
+        '시음타입': tasting.tasting_type === 'bar' ? '바' : tasting.tasting_type === 'meeting' ? '모임' : '구매한 보틀',
+        '소비량(ml)': tasting.consumed_volume_ml || '',
+        '노즈점수': tasting.nose_rating || '',
+        '팔레트점수': tasting.palate_rating || '',
+        '피니쉬점수': tasting.finish_rating || '',
+        '종합점수': tasting.overall_rating || '',
+        '노즈메모': tasting.nose_notes || '',
+        '팔레트메모': tasting.palate_notes || '',
+        '피니쉬메모': tasting.finish_notes || '',
+        '추가메모': tasting.additional_notes || '',
+        '함께한사람': tasting.companions || ''
+      }))
+
+      // 위시리스트 데이터 준비
+      const wishlistData = wishlist.map(item => ({
+        '위스키명': item.name,
+        '브랜드': item.brands?.name || item.custom_brand || '',
+        '빈티지': item.vintage || '',
+        '숙성연수': item.age_years || '',
+        '시중가': item.retail_price || '',
+        '용량(ml)': item.total_volume_ml || '',
+        '우선순위': item.priority === 1 ? '낮음' : item.priority === 2 ? '보통' : '높음',
+        '메모': item.notes || ''
+      }))
+
+      // 워크북 생성
+      const wb = utils.book_new()
+      
+      // 시트 생성
+      const bottlesSheet = utils.json_to_sheet(bottlesData)
+      const tastingsSheet = utils.json_to_sheet(tastingsData)
+      const wishlistSheet = utils.json_to_sheet(wishlistData)
+
+      // 시트 이름 설정
+      utils.book_append_sheet(wb, bottlesSheet, '위스키 컬렉션')
+      utils.book_append_sheet(wb, tastingsSheet, '시음 기록')
+      utils.book_append_sheet(wb, wishlistSheet, '위시리스트')
+
+      // 파일 다운로드
+      const fileName = `whisky-log-${new Date().toISOString().split('T')[0]}.xlsx`
+      const wbout = write(wb, { bookType: 'xlsx', type: 'array' })
+      const blob = new Blob([wbout], { type: 'application/octet-stream' })
+      saveAs(blob, fileName)
+
+      alert('데이터가 성공적으로 내보내졌습니다!')
+    } catch (error) {
+      console.error('데이터 내보내기 오류:', error)
+      alert('데이터 내보내기 중 오류가 발생했습니다.')
+    } finally {
+      setExportingData(false)
+    }
+  }
+
+  // 데이터 가져오기 함수
+  const importData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setImportingData(true)
+    
+    try {
+      const result = await importDataUtil(
+        file, 
+        user, 
+        bottles, 
+        allTastings, 
+        wishlist, 
+        brands,
+        fetchBottles,
+        fetchAllTastings,
+        fetchWishlist,
+        fetchBrands
+      )
+      
+      if (result.success) {
+        alert(result.message)
+      } else {
+        alert(result.error)
+      }
+      
+    } catch (error) {
+      console.error('데이터 가져오기 오류:', error)
+      alert('데이터 가져오기 중 오류가 발생했습니다.')
+    } finally {
+      setImportingData(false)
+      event.target.value = '' // Reset file input
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{
+        width: '100vw', 
+        height: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#111827',
+        color: 'white'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>��</div>
+          <p>로딩중...</p>
+        </div>
+      </div>
+    )
+  }
+}
+  }
+
+  if (!user) {
+    return (
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#111827',
+        color: 'white'
+      }}>
+        <div style={{
+          backgroundColor: '#1F2937',
+          padding: '32px',
+          borderRadius: '12px',
+          width: '90%',
+          maxWidth: '400px'
+        }}>
+          <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>
+            로그인
+          </h2>
+          <p style={{ textAlign: 'center', marginBottom: '16px' }}>
+            위스키 로그에 오신 것을 환영합니다!
+          </p>
+          <button
+            onClick={() => supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: window.location.origin
+              }
+            })}
+            style={{
+              width: '100%',
+              padding: '12px',
+              backgroundColor: '#3B82F6',
+              border: 'none',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '16px',
+              cursor: 'pointer'
+            }}
+          >
+            Google로 로그인
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: '#111827',
+      color: 'white',
+      padding: '20px'
+    }}>
+      <h1>Whisky Log</h1>
+      <p>환영합니다, {user.email}님!</p>
+      <button
+        onClick={() => supabase.auth.signOut()}
+        style={{
+          padding: '8px 16px',
+          backgroundColor: '#EF4444',
+          border: 'none',
+          borderRadius: '4px',
+          color: 'white',
+          cursor: 'pointer'
+        }}
+      >
+        로그아웃
+      </button>
+    </div>
+  );
+}

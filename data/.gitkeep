@@ -1,0 +1,2 @@
+# This file ensures the data directory is tracked by git
+# Scraped Whiskybase data will be stored here as JSON backup 
