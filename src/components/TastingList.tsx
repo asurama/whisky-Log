@@ -912,10 +912,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: typeof window !== 'undefined' ? window.scrollY + 'px' : '0px',
+          top: isMobile ? (typeof window !== 'undefined' ? window.scrollY + 'px' : '0px') : 0,
           left: 0,
           right: 0,
-          bottom: typeof window !== 'undefined' ? `calc(100vh - ${window.scrollY}px)` : '100vh',
+          bottom: isMobile ? (typeof window !== 'undefined' ? `calc(100vh - ${window.scrollY}px)` : '100vh') : 0,
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
