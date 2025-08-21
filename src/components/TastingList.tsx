@@ -297,14 +297,15 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
 
   const openEditModal = (tasting: any) => {
     if (onShowTastingModal) {
-      // page.tsx에서 관리하는 모달 사용
+      // page.tsx에서 관리하는 모달 사용 (시음 기록 추가/수정용)
       onShowTastingModal(tasting);
     }
   };
 
   const openBottleTastingModal = (bottle: any) => {
     if (onShowTastingModal) {
-      onShowTastingModal({ bottles: bottle }); // bottle 정보를 포함한 tasting 객체로 전달
+      // page.tsx에서 관리하는 모달 사용 (보틀 시음 추가용)
+      onShowTastingModal({ bottles: bottle });
     }
   };
 
@@ -489,6 +490,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
             onClick={() => {
               setSelectedTasting(tasting);
               setShowTastingModal(true);
+              // page.tsx의 모달이 열려있다면 닫기
+              if (onShowTastingModal) {
+                onShowTastingModal(null);
+              }
               // 현재 스크롤 위치를 저장
               if (typeof window !== 'undefined') {
                 sessionStorage.setItem('scrollPosition', window.scrollY.toString());
@@ -915,10 +920,17 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: 0,
+          top: isMobile ? (() => {
+            const savedPosition = sessionStorage.getItem('scrollPosition');
+            console.log('모바일 모달 위치:', { isMobile, savedPosition, top: savedPosition ? `${parseInt(savedPosition)}px` : '0px' });
+            return savedPosition ? `${parseInt(savedPosition)}px` : '0px';
+          })() : '0px',
           left: 0,
           right: 0,
-          bottom: 0,
+          bottom: isMobile ? (() => {
+            const savedPosition = sessionStorage.getItem('scrollPosition');
+            return savedPosition ? `calc(100vh - ${parseInt(savedPosition)}px)` : '0px';
+          })() : '0px',
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
