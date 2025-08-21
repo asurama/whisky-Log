@@ -71,9 +71,13 @@ export default function LoginForm() {
       <div className="w-full max-w-md">
         {/* 로고 및 제목 */}
         <div className="text-center mb-8">
-          <div className="avatar placeholder mb-4">
-            <div className="bg-primary text-primary-content rounded-box w-20">
-              <span className="text-4xl">🥃</span>
+          <div className="mb-4 flex justify-center">
+            <div className="w-20 h-20 rounded-box overflow-hidden shadow-lg">
+              <img 
+                src="/icons/icon-192x192.png" 
+                alt="Whisky Log"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
           <h1 className="text-4xl font-bold mb-2">Whisky Log</h1>

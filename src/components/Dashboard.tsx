@@ -47,10 +47,12 @@ export default function Dashboard({ user }: DashboardProps) {
       >
         <div className="navbar-start">
           <div className="flex items-center gap-3">
-            <div className="avatar placeholder">
-              <div className="bg-primary text-primary-content rounded-lg w-12">
-                <span className="text-2xl">🥃</span>
-              </div>
+            <div className="w-12 h-12 rounded-lg overflow-hidden">
+              <img 
+                src="/icons/icon-192x192.png" 
+                alt="Whisky Log"
+                className="w-full h-full object-cover"
+              />
             </div>
             <h1 className="text-2xl font-bold">Whisky Log</h1>
           </div>

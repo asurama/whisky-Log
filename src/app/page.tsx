@@ -41,7 +41,20 @@ export default function Home() {
   const [editingTasting, setEditingTasting] = useState<Tasting | null>(null);
   const [selectedBottle, setSelectedBottle] = useState<Bottle | null>(null);
   
+  // 모든 모달 상태 초기화 함수
+  const closeAllModals = () => {
+    setShowWhiskyModal(false);
+    setShowTastingModal(false);
+    setShowTastingHistory(false);
+    setShowDetailModal(false);
+    setEditingBottle(null);
+    setEditingTasting(null);
+    setSelectedBottle(null);
+  };
+
   const handleTabChange = (tabId: string) => {
+    // 탭 변경 시 모든 모달 닫기
+    closeAllModals();
     setActiveTab(tabId as 'collection' | 'tastings' | 'statistics' | 'predictions' | 'recommendations' | 'wishlist' | 'export');
   };
 
@@ -107,6 +120,18 @@ export default function Home() {
 
     { id: 'export', label: '데이터 관리', icon: '⚙️' },
   ];
+
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeAllModals();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -655,11 +680,22 @@ export default function Home() {
           }}
         >
           <div style={{
-            fontSize: isMobile ? '20px' : '32px',
+            width: isMobile ? '24px' : '36px',
+            height: isMobile ? '24px' : '36px',
             filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
-            flexShrink: 0
+            flexShrink: 0,
+            borderRadius: '8px',
+            overflow: 'hidden'
           }}>
-            🥃
+            <img 
+              src="/icons/icon-192x192.png" 
+              alt="Whisky Log"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+            />
           </div>
           <h1 style={{ 
             margin: 0, 

@@ -236,14 +236,19 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
   };
 
   return (
-    <div className="bg-black bg-opacity-80 flex items-start justify-center p-4 pb-20 overflow-y-auto" style={{
-      paddingTop: 'calc(1rem + env(safe-area-inset-top))',
-      paddingBottom: 'calc(1rem + 72px + env(safe-area-inset-bottom))',
-      width: '100%',
-      height: '100%'
+    <div className="bg-black bg-opacity-80 flex items-center justify-center p-4 overflow-y-auto" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000,
+      paddingTop: 'env(safe-area-inset-top)',
+      paddingBottom: 'env(safe-area-inset-bottom)'
     }}>
-      <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl overflow-y-auto relative my-auto shadow-2xl" style={{
-        maxHeight: 'calc(100vh - 2rem - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
+      <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl overflow-y-auto shadow-2xl" style={{
+        maxHeight: 'calc(100vh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+        margin: 'auto'
       }}>
         <div className="flex justify-between items-center mb-6 sticky top-0 bg-gray-800 z-10 pb-3 border-b border-gray-700" style={{
           paddingTop: '4px',
