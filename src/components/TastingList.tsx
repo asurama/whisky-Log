@@ -920,7 +920,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: 0,
+          top: isMobile ? (() => {
+            const savedPosition = sessionStorage.getItem('scrollPosition');
+            return savedPosition ? `${parseInt(savedPosition)}px` : '0px';
+          })() : '0px',
           left: 0,
           right: 0,
           bottom: 0,
@@ -942,7 +945,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: 0,
+          top: isMobile ? (() => {
+            const savedPosition = sessionStorage.getItem('scrollPosition');
+            return savedPosition ? `${parseInt(savedPosition)}px` : '0px';
+          })() : '0px',
           left: 0,
           right: 0,
           bottom: 0,
