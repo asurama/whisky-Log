@@ -488,8 +488,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
               border: '1px solid #374151'
             }}
             onClick={() => {
+              console.log('시음기록 상세보기 클릭됨:', tasting.id);
               setSelectedTasting(tasting);
               setShowTastingModal(true);
+              console.log('showTastingModal 상태 설정됨');
               // 현재 스크롤 위치를 저장
               if (typeof window !== 'undefined') {
                 sessionStorage.setItem('scrollPosition', window.scrollY.toString());
@@ -913,20 +915,20 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
 
 
       {/* 시음기록 확대 모달 */}
+      {console.log('모달 렌더링 조건:', { showTastingModal, selectedTasting: !!selectedTasting })}
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
           top: isMobile ? (() => {
             const savedPosition = sessionStorage.getItem('scrollPosition');
-            console.log('모바일 모달 위치:', { isMobile, savedPosition, top: savedPosition ? `${parseInt(savedPosition)}px` : '0px' });
             return savedPosition ? `${parseInt(savedPosition)}px` : '0px';
           })() : '0px',
           left: 0,
           right: 0,
-          bottom: isMobile ? (() => {
+          height: isMobile ? (() => {
             const savedPosition = sessionStorage.getItem('scrollPosition');
-            return savedPosition ? `calc(100vh - ${parseInt(savedPosition)}px)` : '0px';
-          })() : '0px',
+            return savedPosition ? `calc(100vh - ${parseInt(savedPosition)}px)` : '100vh';
+          })() : '100vh',
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
