@@ -917,31 +917,7 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
 
       {/* 시음기록 확대 모달 */}
       {console.log('모달 렌더링 조건:', { showTastingModal, selectedTasting: !!selectedTasting })}
-      {showTastingModal && selectedTasting && (
-        <div style={{
-          position: 'fixed',
-          top: isMobile ? (() => {
-            const savedPosition = sessionStorage.getItem('scrollPosition');
-            return savedPosition ? `${parseInt(savedPosition)}px` : '0px';
-          })() : '0px',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'red',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 999999999,
-          padding: '20px',
-          paddingBottom: isMobile ? '80px' : '20px',
-          overflowY: 'auto',
-          transform: 'translateZ(0)'
-        }}>
-          <div style={{ color: 'white', fontSize: '24px' }}>
-            모달이 나타났습니다! {selectedTasting.id}
-          </div>
-        </div>
-      )}
+
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
@@ -978,11 +954,13 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
               onClick={() => {
                 setShowTastingModal(false);
                 setSelectedTasting(null);
-                // 저장된 스크롤 위치로 복원
+                // 저장된 스크롤 위치로 복원 (지연시켜서 클릭 이벤트 충돌 방지)
                 const savedPosition = sessionStorage.getItem('scrollPosition');
                 if (savedPosition) {
-                  window.scrollTo(0, parseInt(savedPosition));
-                  sessionStorage.removeItem('scrollPosition');
+                  setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedPosition));
+                    sessionStorage.removeItem('scrollPosition');
+                  }, 100);
                 }
               }}
               style={{
