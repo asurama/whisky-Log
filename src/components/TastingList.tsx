@@ -924,6 +924,28 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
           left: 0,
           right: 0,
           bottom: 0,
+          backgroundColor: 'red',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 999999999,
+          padding: '20px',
+          paddingBottom: isMobile ? '80px' : '20px',
+          overflowY: 'auto',
+          transform: 'translateZ(0)'
+        }}>
+          <div style={{ color: 'white', fontSize: '24px' }}>
+            모달이 나타났습니다! {selectedTasting.id}
+          </div>
+        </div>
+      )}
+      {showTastingModal && selectedTasting && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
