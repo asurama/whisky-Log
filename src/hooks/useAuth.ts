@@ -7,37 +7,8 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // URL 해시 파라미터 처리 (OAuth 리다이렉트 후)
-    const handleAuthRedirect = async () => {
-      if (typeof window !== 'undefined') {
-        const hash = window.location.hash
-        if (hash && hash.includes('access_token')) {
-          // URL에서 토큰 파라미터 추출
-          const params = new URLSearchParams(hash.substring(1))
-          const accessToken = params.get('access_token')
-          const refreshToken = params.get('refresh_token')
-          
-          if (accessToken && refreshToken) {
-            // Supabase 세션 설정
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            })
-            
-            if (!error && data.session) {
-              setUser(data.session.user)
-              // URL 정리 (해시 제거)
-              window.history.replaceState({}, document.title, window.location.pathname)
-            }
-          }
-        }
-      }
-    }
-
     // 현재 사용자 세션 확인
     const checkUser = async () => {
-      await handleAuthRedirect() // 먼저 리다이렉트 처리
-      
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
       setLoading(false)
