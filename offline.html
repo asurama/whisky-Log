@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오프라인 - Whisky Log</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .offline-container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+
+        .offline-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #F59E0B;
+        }
+
+        .offline-message {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            color: #9CA3AF;
+        }
+
+        .offline-features {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .offline-features h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #10B981;
+        }
+
+        .feature-list {
+            list-style: none;
+            text-align: left;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #D1D5DB;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: #10B981;
+            font-weight: bold;
+        }
+
+        .retry-button {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 12px;
+        }
+
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .offline-button {
+            background: transparent;
+            color: #9CA3AF;
+            border: 1px solid #4B5563;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .offline-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #EF4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .offline-title {
+                font-size: 24px;
+            }
+            
+            .offline-message {
+                font-size: 14px;
+            }
+            
+            .offline-features {
+                padding: 16px;
+            }
+            
+            .retry-button,
+            .offline-button {
+                width: 100%;
+                margin: 8px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status">오프라인</div>
+    
+    <div class="offline-container">
+        <div class="offline-icon">📶</div>
+        
+        <h1 class="offline-title">인터넷 연결이 없습니다</h1>
+        
+        <p class="offline-message">
+            현재 오프라인 상태입니다. 인터넷 연결을 확인하고 다시 시도해주세요.
+        </p>
+        
+        <div class="offline-features">
+            <h3>오프라인에서도 사용 가능한 기능</h3>
+            <ul class="feature-list">
+                <li>캐시된 위스키 컬렉션 보기</li>
+                <li>캐시된 시음 기록 보기</li>
+                <li>기본 검색 기능</li>
+                <li>앱 기본 기능 사용</li>
+            </ul>
+        </div>
+        
+        <div>
+            <button class="retry-button" onclick="retryConnection()">
+                🔄 다시 시도
+            </button>
+            <button class="offline-button" onclick="continueOffline()">
+                오프라인으로 계속
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 연결 상태 확인
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }
+
+        // 다시 시도 버튼
+        function retryConnection() {
+            checkConnection();
+            
+            // 버튼 상태 변경
+            const button = event.target;
+            button.textContent = '🔄 확인 중...';
+            button.disabled = true;
+            
+            // 3초 후 원래 상태로 복원
+            setTimeout(() => {
+                button.textContent = '🔄 다시 시도';
+                button.disabled = false;
+            }, 3000);
+        }
+
+        // 오프라인으로 계속
+        function continueOffline() {
+            // 캐시된 페이지로 이동 시도
+            if ('caches' in window) {
+                caches.match('/')
+                    .then(response => {
+                        if (response) {
+                            window.location.href = '/';
+                        } else {
+                            alert('캐시된 데이터가 없습니다. 인터넷 연결을 확인해주세요.');
+                        }
+                    });
+            } else {
+                alert('브라우저가 오프라인 기능을 지원하지 않습니다.');
+            }
+        }
+
+        // 온라인/오프라인 이벤트 리스너
+        window.addEventListener('online', () => {
+            console.log('🟢 온라인 상태로 변경');
+            window.location.reload();
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('🔴 오프라인 상태로 변경');
+        });
+
+        // 주기적으로 연결 상태 확인
+        setInterval(checkConnection, 5000);
+
+        // 페이지 로드 시 연결 상태 확인
+        window.addEventListener('load', () => {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html> 
