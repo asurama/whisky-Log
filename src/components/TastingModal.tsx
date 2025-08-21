@@ -238,10 +238,10 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
   return (
     <div className="bg-black bg-opacity-80 flex items-center justify-center p-4 overflow-y-auto" style={{
       position: 'fixed',
-      top: 0,
+      top: typeof window !== 'undefined' ? window.scrollY + 'px' : '0px',
       left: 0,
       right: 0,
-      bottom: 0,
+      bottom: typeof window !== 'undefined' ? `calc(100vh - ${window.scrollY}px)` : '100vh',
       zIndex: 1000,
       paddingTop: 'env(safe-area-inset-top)',
       paddingBottom: 'env(safe-area-inset-bottom)'

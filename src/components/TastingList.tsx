@@ -912,10 +912,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: 0,
+          top: isMobile ? (typeof window !== 'undefined' ? window.scrollY + 'px' : '0px') : 0,
           left: 0,
           right: 0,
-          bottom: 0,
+          bottom: isMobile ? (typeof window !== 'undefined' ? `calc(100vh - ${window.scrollY}px)` : '100vh') : 0,
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
@@ -923,7 +923,6 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
           zIndex: 2000,
           padding: '20px',
           overflowY: 'auto',
-          // PC에서 스크롤 위치와 관계없이 화면 중앙에 표시
           transform: 'translateZ(0)'
         }}>
           {/* 기존 카드를 그대로 확대해서 보여주기 */}
