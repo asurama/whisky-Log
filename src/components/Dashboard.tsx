@@ -11,7 +11,22 @@ export default function Dashboard({ user }: DashboardProps) {
   const [activeTab, setActiveTab] = useState('bottles')
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (!error) {
+        // 로컬 스토리지와 세션 스토리지 정리
+        localStorage.clear();
+        sessionStorage.clear();
+        // 페이지 새로고침으로 완전한 로그아웃
+        window.location.reload();
+      } else {
+        console.error('로그아웃 오류:', error);
+        alert('로그아웃 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+      alert('로그아웃 중 오류가 발생했습니다.');
+    }
   }
 
   return (

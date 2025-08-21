@@ -44,7 +44,15 @@ export function useAuth() {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut({ scope: 'global' })
+    if (!error) {
+      setUser(null)
+      // 로컬 스토리지와 세션 스토리지 정리
+      if (typeof window !== 'undefined') {
+        localStorage.clear()
+        sessionStorage.clear()
+      }
+    }
     return { error }
   }
 
