@@ -497,6 +497,11 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
                 const scrollPosition = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
                 sessionStorage.setItem('scrollPosition', scrollPosition.toString());
                 console.log('스크롤 위치 저장:', scrollPosition);
+                // 모달이 열리기 전에 스크롤 위치를 다시 확인
+                setTimeout(() => {
+                  const currentScroll = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+                  console.log('모달 열린 후 스크롤 위치:', currentScroll);
+                }, 50);
               }
             }}
             onMouseEnter={(e) => {
@@ -923,7 +928,13 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
           position: 'fixed',
           top: isMobile ? (() => {
             const savedPosition = sessionStorage.getItem('scrollPosition');
-            return savedPosition ? `${parseInt(savedPosition)}px` : '0px';
+            console.log('모달 top 계산:', { savedPosition, isMobile });
+            if (savedPosition) {
+              const scrollTop = parseInt(savedPosition);
+              console.log('계산된 top 위치:', scrollTop);
+              return `${scrollTop}px`;
+            }
+            return '0px';
           })() : '0px',
           left: 0,
           right: 0,
