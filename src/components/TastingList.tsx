@@ -490,10 +490,6 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
             onClick={() => {
               setSelectedTasting(tasting);
               setShowTastingModal(true);
-              // page.tsx의 모달이 열려있다면 닫기
-              if (onShowTastingModal) {
-                onShowTastingModal(null);
-              }
               // 현재 스크롤 위치를 저장
               if (typeof window !== 'undefined') {
                 sessionStorage.setItem('scrollPosition', window.scrollY.toString());
