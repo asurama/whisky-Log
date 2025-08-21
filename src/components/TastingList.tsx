@@ -490,7 +490,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
               setSelectedTasting(tasting);
               setShowTastingModal(true);
               // 현재 스크롤 위치를 저장
-              sessionStorage.setItem('scrollPosition', window.scrollY.toString());
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('scrollPosition', window.scrollY.toString());
+                console.log('스크롤 위치 저장:', window.scrollY);
+              }
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
@@ -912,10 +915,16 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: isMobile ? (typeof window !== 'undefined' ? window.scrollY + 'px' : '0px') : 0,
+          top: isMobile ? (() => {
+            const savedPosition = sessionStorage.getItem('scrollPosition');
+            return savedPosition ? `${savedPosition}px` : '0px';
+          })() : '0px',
           left: 0,
           right: 0,
-          bottom: isMobile ? (typeof window !== 'undefined' ? `calc(100vh - ${window.scrollY}px)` : '100vh') : 0,
+          bottom: isMobile ? (() => {
+            const savedPosition = sessionStorage.getItem('scrollPosition');
+            return savedPosition ? `calc(100vh - ${savedPosition}px)` : '100vh';
+          })() : '0px',
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
