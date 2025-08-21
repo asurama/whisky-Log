@@ -168,7 +168,7 @@ export default function Home() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}${window.location.pathname}`
+            emailRedirectTo: `${window.location.origin}${window.location.pathname || '/whisky-Log/'}`
           }
         });
         
@@ -546,7 +546,7 @@ export default function Home() {
             onClick={() => supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
-                redirectTo: `${window.location.origin}${window.location.pathname}`
+                redirectTo: `${window.location.origin}${window.location.pathname || '/whisky-Log/'}`
               }
             })}
             style={{
