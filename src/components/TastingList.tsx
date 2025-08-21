@@ -920,27 +920,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: isMobile ? (() => {
-            const savedPosition = sessionStorage.getItem('scrollPosition');
-            console.log('저장된 스크롤 위치:', savedPosition);
-            if (savedPosition) {
-              const scrollTop = parseInt(savedPosition);
-              console.log('계산된 top 위치:', scrollTop);
-              return `${scrollTop}px`;
-            }
-            return '0px';
-          })() : '0px',
+          top: 0,
           left: 0,
           right: 0,
-          height: isMobile ? (() => {
-            const savedPosition = sessionStorage.getItem('scrollPosition');
-            if (savedPosition) {
-              const scrollTop = parseInt(savedPosition);
-              // 모바일 네비게이션 바 높이를 고려 (약 60px)
-              return `calc(100vh - ${scrollTop}px - 60px)`;
-            }
-            return 'calc(100vh - 60px)';
-          })() : '100vh',
+          bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
