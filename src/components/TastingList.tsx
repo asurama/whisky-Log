@@ -492,17 +492,6 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
               setSelectedTasting(tasting);
               setShowTastingModal(true);
               console.log('showTastingModal 상태 설정됨');
-              // 현재 스크롤 위치를 저장 (더 정확한 위치)
-              if (typeof window !== 'undefined') {
-                const scrollPosition = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
-                sessionStorage.setItem('scrollPosition', scrollPosition.toString());
-                console.log('스크롤 위치 저장:', scrollPosition);
-                // 모달이 열리기 전에 스크롤 위치를 다시 확인
-                setTimeout(() => {
-                  const currentScroll = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
-                  console.log('모달 열린 후 스크롤 위치:', currentScroll);
-                }, 50);
-              }
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
@@ -926,16 +915,7 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: isMobile ? (() => {
-            const savedPosition = sessionStorage.getItem('scrollPosition');
-            console.log('모달 top 계산:', { savedPosition, isMobile });
-            if (savedPosition) {
-              const scrollTop = parseInt(savedPosition);
-              console.log('계산된 top 위치:', scrollTop);
-              return `${scrollTop}px`;
-            }
-            return '0px';
-          })() : '0px',
+          top: 0,
           left: 0,
           right: 0,
           bottom: 0,
@@ -965,14 +945,6 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
               onClick={() => {
                 setShowTastingModal(false);
                 setSelectedTasting(null);
-                // 저장된 스크롤 위치로 복원 (지연시켜서 클릭 이벤트 충돌 방지)
-                const savedPosition = sessionStorage.getItem('scrollPosition');
-                if (savedPosition) {
-                  setTimeout(() => {
-                    window.scrollTo(0, parseInt(savedPosition));
-                    sessionStorage.removeItem('scrollPosition');
-                  }, 100);
-                }
               }}
               style={{
                 position: 'absolute',
