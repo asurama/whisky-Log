@@ -49,7 +49,7 @@ export default function Dashboard({ user }: DashboardProps) {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-lg overflow-hidden">
               <img 
-                src="/icons/icon-192x192.png" 
+                src="/whisky-Log/icons/icon-192x192.png" 
                 alt="Whisky Log"
                 className="w-full h-full object-cover"
               />

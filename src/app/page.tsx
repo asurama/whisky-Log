@@ -688,7 +688,7 @@ export default function Home() {
             overflow: 'hidden'
           }}>
             <img 
-              src="/icons/icon-192x192.png" 
+              src="/whisky-Log/icons/icon-192x192.png" 
               alt="Whisky Log"
               style={{
                 width: '100%',

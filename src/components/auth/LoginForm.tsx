@@ -74,7 +74,7 @@ export default function LoginForm() {
           <div className="mb-4 flex justify-center">
             <div className="w-20 h-20 rounded-box overflow-hidden shadow-lg">
               <img 
-                src="/icons/icon-192x192.png" 
+                src="/whisky-Log/icons/icon-192x192.png" 
                 alt="Whisky Log"
                 className="w-full h-full object-cover"
               />
