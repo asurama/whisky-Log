@@ -489,6 +489,10 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
             }}
             onClick={() => {
               console.log('시음기록 상세보기 클릭됨:', tasting.id);
+              // 현재 스크롤 위치 저장
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('scrollPosition', window.scrollY.toString());
+              }
               setSelectedTasting(tasting);
               setShowTastingModal(true);
               console.log('showTastingModal 상태 설정됨');
@@ -915,10 +919,16 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
       {showTastingModal && selectedTasting && (
         <div style={{
           position: 'fixed',
-          top: 0,
+          top: isMobile ? (() => {
+            const savedScroll = sessionStorage.getItem('scrollPosition');
+            return savedScroll ? `${savedScroll}px` : '0px';
+          })() : 0,
           left: 0,
           right: 0,
-          bottom: 0,
+          bottom: isMobile ? (() => {
+            const savedScroll = sessionStorage.getItem('scrollPosition');
+            return savedScroll ? `calc(100vh - ${savedScroll}px)` : '100vh';
+          })() : 0,
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
