@@ -1,6 +1,6 @@
-const CACHE_NAME = 'whisky-log-v5.0.0';
-const STATIC_CACHE = 'whisky-log-static-v5.0.0';
-const DYNAMIC_CACHE = 'whisky-log-dynamic-v5.0.0';
+const CACHE_NAME = 'whisky-log-v6.0.0';
+const STATIC_CACHE = 'whisky-log-static-v6.0.0';
+const DYNAMIC_CACHE = 'whisky-log-dynamic-v6.0.0';
 
 // 캐시할 정적 파일들
 const STATIC_FILES = [

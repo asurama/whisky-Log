@@ -5,6 +5,7 @@
   "start_url": "/whisky-Log/",
   "id": "/whisky-Log/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#1F2937",
   "theme_color": "#3B82F6",
   "orientation": "portrait-primary",
