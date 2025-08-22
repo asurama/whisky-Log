@@ -13,8 +13,8 @@ export default function TastingDetailModal({
   const [scrollPosition, setScrollPosition] = useState(0);
 
   useEffect(() => {
-    // 모달이 열릴 때 현재 스크롤 위치를 가져옴
-    const savedScroll = sessionStorage.getItem('scrollPosition');
+    // 모달이 열릴 때 현재 스크롤 위치를 가져옴 (고유한 키 사용)
+    const savedScroll = sessionStorage.getItem('tastingDetailScrollPosition');
     if (savedScroll) {
       setScrollPosition(parseInt(savedScroll, 10));
     }
@@ -47,7 +47,7 @@ export default function TastingDetailModal({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 99999999999,
+      zIndex: 10000, // 더 안전한 z-index
       padding: '20px',
       paddingBottom: isMobile ? '80px' : '20px',
       overflowY: 'auto',
@@ -81,7 +81,7 @@ export default function TastingDetailModal({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 999999999999,
+            zIndex: 10001, // 모달보다 높은 z-index
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
           }}
         >

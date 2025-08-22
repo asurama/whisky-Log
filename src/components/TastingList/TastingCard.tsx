@@ -1,228 +1,372 @@
-'use client';
+import React from 'react';
+import { useDevice } from '@/hooks/useDevice';
+import { Tasting, TastingCardProps } from '@/types/tasting';
+import { cardStyles, buttonStyles } from '@/styles/common';
 
-import { useState } from 'react';
-import { useToast } from '../Toast';
-
-interface TastingCardProps {
-  tasting: any;
-  onEdit: (tasting: any) => void;
-  onDelete: (id: string) => void;
-}
-
-export default function TastingCard({ tasting, onEdit, onDelete }: TastingCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const { showToast } = useToast();
-
-  const handleDelete = async () => {
-    if (confirm('정말로 이 시음 기록을 삭제하시겠습니까?')) {
-      try {
-        onDelete(tasting.id);
-        showToast('시음 기록이 삭제되었습니다.', 'success');
-      } catch (error) {
-        showToast('삭제 중 오류가 발생했습니다.', 'error');
-      }
-    }
-  };
-
-  const getTastingTypeLabel = () => {
-    switch (tasting.tasting_type) {
-      case 'bottle':
-        return '보틀 시음';
-      case 'bar':
-        return '바 시음';
-      case 'meeting':
-        return '모임 시음';
-      default:
-        return '기타';
-    }
-  };
-
-  const getRatingStars = (rating: number) => {
-    return '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
-  };
+export default function TastingCard({
+  tasting,
+  index,
+  onCardClick,
+  onEditClick,
+  onShareClick,
+  onDeleteClick
+}: TastingCardProps) {
+  const { isMobile } = useDevice();
 
   return (
     <div
-      className="mobile-card"
+      className="fade-in"
       style={{
-        backgroundColor: '#1F2937',
-        borderRadius: '12px',
-        padding: '16px',
-        border: '1px solid #374151',
-        transition: 'all 0.2s ease',
-        transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
-        boxShadow: isHovered ? '0 8px 25px rgba(0, 0, 0, 0.3)' : '0 4px 6px rgba(0, 0, 0, 0.1)',
-        minHeight: '200px',
-        display: 'flex',
-        flexDirection: 'column'
+        ...cardStyles.container,
+        animationDelay: `${index * 0.1}s`
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onCardClick(tasting)}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
     >
-      {/* 시음 유형 배지 */}
-      <div style={{ marginBottom: '12px' }}>
-        <span style={{
-          backgroundColor: tasting.tasting_type === 'bottle' ? '#10B981' : '#3B82F6',
-          color: 'white',
-          padding: '4px 8px',
-          borderRadius: '4px',
+      {/* 이미지 섹션 */}
+      <div style={{
+        position: 'relative',
+        marginBottom: '20px',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        height: '180px',
+        background: 'linear-gradient(135deg, #374151 0%, #4b5563 100%)'
+      }}>
+        {(tasting.image_url || tasting.bottles?.image_url) ? (
+          <img
+            src={tasting.image_url || tasting.bottles?.image_url}
+            alt={tasting.bottles?.name || '시음 기록'}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '48px',
+            color: '#6b7280'
+          }}>
+            🍷
+          </div>
+        )}
+      
+        {/* 시음 타입 배지 */}
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          left: '12px',
+          padding: '6px 12px',
+          borderRadius: '20px',
           fontSize: '12px',
-          fontWeight: '500'
+          fontWeight: '600',
+          backgroundColor: tasting.tasting_type === 'bar' ? 'rgba(16, 185, 129, 0.9)' : 
+                         tasting.tasting_type === 'meeting' ? 'rgba(59, 130, 246, 0.9)' : 'rgba(245, 158, 11, 0.9)',
+          color: 'white',
+          backdropFilter: 'blur(8px)'
         }}>
-          {getTastingTypeLabel()}
-        </span>
+          {tasting.tasting_type === 'bar' ? '바' : 
+           tasting.tasting_type === 'meeting' ? '모임' : '보틀'}
+        </div>
+        
+        {/* 날짜 배지 */}
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          right: '12px',
+          padding: '6px 12px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: '600',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          backdropFilter: 'blur(8px)'
+        }}>
+          {new Date(tasting.tasting_date).toLocaleDateString('ko-KR')}
+        </div>
       </div>
 
-      {/* 위스키 정보 */}
-      <div style={{ marginBottom: '12px' }}>
-        <h3 style={{
-          fontSize: '16px',
-          fontWeight: '600',
+      {/* 정보 섹션 */}
+      <div>
+        {/* 제목과 브랜드 */}
+        <h3 style={{ 
+          margin: '0 0 8px 0', 
+          fontSize: '18px',
+          fontWeight: '700',
           color: 'white',
-          marginBottom: '4px',
           lineHeight: '1.3'
         }}>
-          {tasting.bottle_name || tasting.bottles?.name || '알 수 없는 위스키'}
+          {tasting.bottles?.name || tasting.bottle_name || '바/모임 시음'}
         </h3>
-        <p style={{
-          fontSize: '14px',
-          color: '#9CA3AF',
-          marginBottom: '4px'
-        }}>
-          {tasting.bottle_brand || tasting.bottles?.brands?.name || tasting.bottles?.custom_brand || '알 수 없는 브랜드'}
-        </p>
-      </div>
-
-      {/* 시음 정보 */}
-      <div style={{ marginBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-          {tasting.tasting_date && (
-            <span style={{
-              fontSize: '12px',
-              color: '#9CA3AF',
-              backgroundColor: '#374151',
-              padding: '2px 6px',
-              borderRadius: '4px'
-            }}>
-              📅 {new Date(tasting.tasting_date).toLocaleDateString()}
-            </span>
-          )}
-          {tasting.volume_ml && (
-            <span style={{
-              fontSize: '12px',
-              color: '#9CA3AF',
-              backgroundColor: '#374151',
-              padding: '2px 6px',
-              borderRadius: '4px'
-            }}>
-              🍷 {tasting.volume_ml}ml
-            </span>
-          )}
-          {tasting.rating && (
-            <span style={{
-              fontSize: '12px',
-              color: '#9CA3AF',
-              backgroundColor: '#374151',
-              padding: '2px 6px',
-              borderRadius: '4px'
-            }}>
-              {getRatingStars(tasting.rating)}
-            </span>
-          )}
-        </div>
-
-        {/* 추가 정보 */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {tasting.location && (
-            <span style={{
-              fontSize: '12px',
-              color: '#9CA3AF',
-              backgroundColor: '#374151',
-              padding: '2px 6px',
-              borderRadius: '4px'
-            }}>
-              📍 {tasting.location}
-            </span>
-          )}
-          {tasting.price && (
-            <span style={{
-              fontSize: '12px',
-              color: '#9CA3AF',
-              backgroundColor: '#374151',
-              padding: '2px 6px',
-              borderRadius: '4px'
-            }}>
-              ₩{Number(tasting.price).toLocaleString()}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* 메모 */}
-      {tasting.notes && (
-        <div style={{ marginBottom: '12px' }}>
-          <p style={{
-            fontSize: '14px',
-            color: '#D1D5DB',
-            lineHeight: '1.4',
-            fontStyle: 'italic'
-          }}>
-            "{tasting.notes}"
-          </p>
-        </div>
-      )}
-
-      {/* 버튼들 */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '6px', 
-        marginTop: 'auto',
-        justifyContent: 'space-between'
-      }}>
-        <button
-          type="button"
-          className="mobile-button"
-          onClick={() => {
-            // 현재 스크롤 위치를 저장
-            sessionStorage.setItem('tastingScrollPosition', window.scrollY.toString());
-            onEdit(tasting);
-          }}
-          style={{
-            flex: 1,
-            padding: '8px 12px',
-            backgroundColor: '#3B82F6',
-            border: 'none',
-            borderRadius: '6px',
-            color: 'white',
-            cursor: 'pointer',
-            fontSize: '12px',
-            fontWeight: '500',
-            whiteSpace: 'nowrap',
-            minWidth: '0'
-          }}
-        >
-          ✏️ 수정
-        </button>
         
-        <button
-          type="button"
-          className="mobile-button"
-          onClick={handleDelete}
-          style={{
-            padding: '8px 12px',
-            backgroundColor: '#EF4444',
-            border: 'none',
-            borderRadius: '6px',
-            color: 'white',
-            cursor: 'pointer',
-            fontSize: '12px',
-            fontWeight: '500',
-            whiteSpace: 'nowrap',
-            minWidth: '0'
-          }}
-        >
-          🗑️ 삭제
-        </button>
+        <p style={{ 
+          margin: '0 0 16px 0', 
+          color: '#9CA3AF',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}>
+          {tasting.bottles?.brands?.name || tasting.bottles?.custom_brand || tasting.bottle_brand || ''}
+        </p>
+
+        {/* 평점 정보 */}
+        <div style={{ 
+          marginBottom: '20px',
+          padding: '16px',
+          backgroundColor: 'rgba(17, 24, 39, 0.5)',
+          borderRadius: '8px',
+          border: '1px solid rgba(75, 85, 99, 0.3)'
+        }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(2, 1fr)', 
+            gap: '12px' 
+          }}>
+            {tasting.nose_rating && (
+              <div>
+                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>노즈</span>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '4px',
+                  marginTop: '4px'
+                }}>
+                  <span style={{ color: 'white', fontSize: '16px', fontWeight: '600' }}>
+                    {tasting.nose_rating}
+                  </span>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '2px' 
+                  }}>
+                    {[...Array(10)].map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: i < tasting.nose_rating ? '#FBBF24' : '#374151'
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {tasting.palate_rating && (
+              <div>
+                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>팔레트</span>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '4px',
+                  marginTop: '4px'
+                }}>
+                  <span style={{ color: 'white', fontSize: '16px', fontWeight: '600' }}>
+                    {tasting.palate_rating}
+                  </span>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '2px' 
+                  }}>
+                    {[...Array(10)].map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: i < tasting.palate_rating ? '#FBBF24' : '#374151'
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {tasting.finish_rating && (
+              <div>
+                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>피니시</span>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '4px',
+                  marginTop: '4px'
+                }}>
+                  <span style={{ color: 'white', fontSize: '16px', fontWeight: '600' }}>
+                    {tasting.finish_rating}
+                  </span>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '2px' 
+                  }}>
+                    {[...Array(10)].map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: i < tasting.finish_rating ? '#FBBF24' : '#374151'
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {tasting.overall_rating && (
+              <div>
+                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>종합</span>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '4px',
+                  marginTop: '4px'
+                }}>
+                  <span style={{ color: '#FBBF24', fontSize: '18px', fontWeight: '700' }}>
+                    {tasting.overall_rating}
+                  </span>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '2px' 
+                  }}>
+                    {[...Array(10)].map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: i < Math.round(tasting.overall_rating) ? '#FBBF24' : '#374151'
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 메모 정보 */}
+        {(tasting.nose_notes || tasting.palate_notes || tasting.finish_notes || tasting.additional_notes) && (
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ 
+              margin: '0 0 12px 0', 
+              fontSize: '14px',
+              color: '#9CA3AF',
+              fontWeight: '600'
+            }}>
+              시음 노트
+            </h4>
+            <div style={{ 
+              padding: '12px',
+              backgroundColor: 'rgba(17, 24, 39, 0.3)',
+              borderRadius: '6px',
+              fontSize: '13px',
+              lineHeight: '1.5',
+              color: '#D1D5DB'
+            }}>
+              {tasting.nose_notes && (
+                <div style={{ marginBottom: '8px' }}>
+                  <strong style={{ color: '#FBBF24' }}>노즈:</strong> {tasting.nose_notes}
+                </div>
+              )}
+              {tasting.palate_notes && (
+                <div style={{ marginBottom: '8px' }}>
+                  <strong style={{ color: '#FBBF24' }}>팔레트:</strong> {tasting.palate_notes}
+                </div>
+              )}
+              {tasting.finish_notes && (
+                <div style={{ marginBottom: '8px' }}>
+                  <strong style={{ color: '#FBBF24' }}>피니시:</strong> {tasting.finish_notes}
+                </div>
+              )}
+              {tasting.additional_notes && (
+                <div>
+                  <strong style={{ color: '#FBBF24' }}>추가:</strong> {tasting.additional_notes}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 액션 버튼들 */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          gap: '12px'
+        }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onEditClick(tasting);
+            }}
+            style={{
+              ...buttonStyles.editButton,
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+              }}
+            }}
+          >
+            ✏️ 수정
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onShareClick(tasting);
+            }}
+            style={{
+              ...buttonStyles.shareButton,
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+              }}
+            }}
+          >
+            📤 공유
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onDeleteClick(tasting.id);
+            }}
+            style={{
+              ...buttonStyles.deleteButton,
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+              }}
+            }}
+          >
+            🗑️ 삭제
+          </button>
+        </div>
       </div>
     </div>
   );
