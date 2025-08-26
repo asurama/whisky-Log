@@ -311,6 +311,31 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
               </div>
             )}
 
+            {/* 위스키 이름 입력 (보유 위스키가 아닌 경우) */}
+            {(!bottle || !bottle.name) && (
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                  위스키 이름 *
+                </label>
+                <input
+                  type="text"
+                  placeholder="시음한 위스키 이름을 입력하세요"
+                  value={formData.bottle_name}
+                  onChange={(e) => handleInputChange('bottle_name', e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    backgroundColor: '#111827',
+                    color: 'white',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+            )}
+
             {/* 시음 타입 선택 */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
