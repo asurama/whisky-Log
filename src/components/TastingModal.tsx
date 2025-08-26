@@ -164,18 +164,25 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
     setLoading(true);
 
     try {
-      console.log('시음 기록 추가 시작...');
+      console.log('=== 시음 기록 처리 시작 ===');
       console.log('사용자 ID:', user.id);
       console.log('보틀 정보:', bottle);
+      console.log('폼 데이터:', formData);
+      console.log('선택된 이미지:', selectedImage);
       
       let finalImageUrl = formData.image_url;
 
       if (selectedImage) {
         console.log('이미지 업로드 시작...');
-        const uploadedUrl = await uploadTastingImageToSupabase(selectedImage, 'tastings');
-        if (uploadedUrl) {
-          finalImageUrl = uploadedUrl;
-          console.log('이미지 업로드 완료:', uploadedUrl);
+        try {
+          const uploadedUrl = await uploadTastingImageToSupabase(selectedImage, 'tastings');
+          if (uploadedUrl) {
+            finalImageUrl = uploadedUrl;
+            console.log('이미지 업로드 완료:', uploadedUrl);
+          }
+        } catch (imageError) {
+          console.error('이미지 업로드 실패:', imageError);
+          throw new Error(`이미지 업로드 실패: ${imageError}`);
         }
       }
 
@@ -203,12 +210,25 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
       console.log('저장할 시음 데이터:', tastingData);
 
       if (editingTasting) {
-        const { error } = await supabase
+        console.log('시음 기록 수정 모드...');
+        const { data: updateData, error } = await supabase
           .from('tastings')
           .update(tastingData)
-          .eq('id', editingTasting.id);
+          .eq('id', editingTasting.id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('시음 기록 수정 오류:', error);
+          console.error('오류 상세 정보:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw error;
+        }
+        
+        console.log('시음 기록 수정 성공:', updateData);
         
         if (bottle?.id && formData.consumed_volume_ml) {
           await updateBottleVolume(bottle.id, parseFloat(formData.consumed_volume_ml), editingTasting.consumed_volume_ml);
@@ -230,6 +250,7 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
             hint: error.hint,
             code: error.code
           });
+          console.error('전송된 데이터:', tastingData);
           throw error;
         }
         
@@ -250,8 +271,17 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
         onClose();
       }
     } catch (error) {
-      console.error('시음 기록 처리 오류:', error);
-      alert(editingTasting ? '시음 기록 수정 중 오류가 발생했습니다.' : '시음 기록 추가 중 오류가 발생했습니다.');
+      console.error('=== 시음 기록 처리 오류 ===');
+      console.error('오류 타입:', typeof error);
+      console.error('오류 객체:', error);
+      console.error('오류 메시지:', (error as any)?.message);
+      console.error('오류 스택:', (error as any)?.stack);
+      
+      if ((error as any)?.message) {
+        alert(`시음 기록 처리 중 오류가 발생했습니다: ${(error as any).message}`);
+      } else {
+        alert(editingTasting ? '시음 기록 수정 중 오류가 발생했습니다.' : '시음 기록 추가 중 오류가 발생했습니다.');
+      }
     } finally {
       setLoading(false);
     }
