@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { fileToBase64, validateImageFile, compressImage, uploadImageToSupabase } from '@/utils/imageUtils';
+import { fileToBase64, validateImageFile, compressImage, uploadTastingImageToSupabase } from '@/utils/imageUtils';
 import ResponsiveImageUpload from './ui/ResponsiveImageUpload';
 
 import { User, Bottle, Tasting, TastingFormData } from '@/types';
@@ -172,7 +172,7 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
 
       if (selectedImage) {
         console.log('이미지 업로드 시작...');
-        const uploadedUrl = await uploadImageToSupabase(selectedImage, 'tastings');
+        const uploadedUrl = await uploadTastingImageToSupabase(selectedImage, 'tastings');
         if (uploadedUrl) {
           finalImageUrl = uploadedUrl;
           console.log('이미지 업로드 완료:', uploadedUrl);

@@ -189,7 +189,7 @@ export function compressImage(
  */
 export async function uploadImageToSupabase(
   file: File, 
-  bucket: string = 'tastings',
+  bucket: string = 'testing-images',
   path?: string
 ): Promise<string> {
   try {
@@ -214,6 +214,11 @@ export async function uploadImageToSupabase(
       console.log('📦 사용 가능한 버킷들:', buckets?.map(b => b.name));
       const bucketExists = buckets?.some(b => b.name === bucket);
       console.log(`🔍 버킷 '${bucket}' 존재 여부:`, bucketExists);
+      
+      if (!bucketExists) {
+        console.error(`❌ 버킷 '${bucket}'이 존재하지 않습니다!`);
+        throw new Error(`버킷 '${bucket}'이 존재하지 않습니다. 사용 가능한 버킷: ${buckets?.map(b => b.name).join(', ')}`);
+      }
     }
     
     // Supabase Storage에 업로드
@@ -256,7 +261,7 @@ export async function uploadImageToSupabase(
  */
 export async function deleteImageFromSupabase(
   imageUrl: string,
-  bucket: string = 'tastings'
+  bucket: string = 'testing-images'
 ): Promise<boolean> {
   try {
     // URL에서 파일 경로 추출
@@ -277,4 +282,46 @@ export async function deleteImageFromSupabase(
     console.error('이미지 삭제 중 오류:', error);
     return false;
   }
+} 
+
+/**
+ * 위스키 컬렉션용 이미지 업로드 (whisky-bottles 버킷 사용)
+ */
+export async function uploadWhiskyImageToSupabase(
+  file: File, 
+  path?: string
+): Promise<string> {
+  return uploadImageToSupabase(file, 'whisky-bottles', path);
+}
+
+/**
+ * 위스키 컬렉션용 이미지 삭제 (whisky-bottles 버킷)
+ * @param imageUrl - 삭제할 이미지 URL
+ * @returns Promise<boolean> - 삭제 성공 여부
+ */
+export async function deleteWhiskyImageFromSupabase(
+  imageUrl: string
+): Promise<boolean> {
+  return deleteImageFromSupabase(imageUrl, 'whisky-bottles');
+}
+
+/**
+ * 시음 기록용 이미지 업로드 (testing-images 버킷 사용)
+ */
+export async function uploadTastingImageToSupabase(
+  file: File, 
+  path?: string
+): Promise<string> {
+  return uploadImageToSupabase(file, 'testing-images', path);
+}
+
+/**
+ * 시음 기록용 이미지 삭제 (testing-images 버킷)
+ * @param imageUrl - 삭제할 이미지 URL
+ * @returns Promise<boolean> - 삭제 성공 여부
+ */
+export async function deleteTastingImageFromSupabase(
+  imageUrl: string
+): Promise<boolean> {
+  return deleteImageFromSupabase(imageUrl, 'testing-images');
 } 
