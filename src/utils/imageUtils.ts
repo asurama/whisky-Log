@@ -340,12 +340,10 @@ export async function uploadTastingImageToSupabase(
 }
 
 /**
- * 시음 기록용 이미지 삭제 (testing-images 버킷)
+ * 시음 기록용 이미지 삭제 (tasting-images 버킷)
  * @param imageUrl - 삭제할 이미지 URL
  * @returns Promise<boolean> - 삭제 성공 여부
  */
-export async function deleteTastingImageFromSupabase(
-  imageUrl: string
-): Promise<boolean> {
-  return deleteImageFromSupabase(imageUrl, 'testing-images');
+export async function deleteTastingImageFromSupabase(imageUrl: string): Promise<boolean> {
+  return deleteImageFromSupabase(imageUrl, 'tasting-images');
 } 
