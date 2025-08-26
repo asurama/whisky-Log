@@ -315,7 +315,28 @@ async function saveToDatabase(whiskyData) {
 
 // 메인 처리 함수
 async function processWhiskyFiles(clearExisting = false) {
-  const mirrorDir = 'data/whiskybase-mirror-en';
+  // 여러 가능한 디렉토리 확인
+  const possibleDirs = [
+    'data/whiskybase-mirror-en',
+    'data/whiskybase-mirror',
+    'data/whiskybase-mirror-en/www.whiskybase.com',
+    'data/whiskybase-mirror/www.whiskybase.com'
+  ];
+  
+  let mirrorDir = null;
+  for (const dir of possibleDirs) {
+    if (fs.existsSync(dir)) {
+      mirrorDir = dir;
+      console.log(`✅ 발견된 미러 디렉토리: ${dir}`);
+      break;
+    }
+  }
+  
+  if (!mirrorDir) {
+    console.error('❌ 미러 디렉토리를 찾을 수 없습니다. 다음 경로들을 확인해주세요:');
+    possibleDirs.forEach(dir => console.error(`   - ${dir}`));
+    return;
+  }
   const stats = {
     total: 0,
     parsed: 0,
@@ -340,11 +361,7 @@ async function processWhiskyFiles(clearExisting = false) {
     console.log('✅ 기존 데이터 삭제 완료');
   }
   
-  // 디렉토리 확인
-  if (!fs.existsSync(mirrorDir)) {
-    console.error('❌ 미러 디렉토리를 찾을 수 없습니다:', mirrorDir);
-    return;
-  }
+  // 디렉토리 확인 (이미 위에서 확인했으므로 제거)
   
   // HTML 파일들 찾기 (여러 경로 지원)
   const files = [];
