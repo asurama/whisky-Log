@@ -1,6 +1,6 @@
-const CACHE_NAME = 'whisky-log-v7.0.0';
-const STATIC_CACHE = 'whisky-log-static-v7.0.0';
-const DYNAMIC_CACHE = 'whisky-log-dynamic-v7.0.0';
+const CACHE_NAME = 'whisky-log-v8.0.0';
+const STATIC_CACHE = 'whisky-log-static-v8.0.0';
+const DYNAMIC_CACHE = 'whisky-log-dynamic-v8.0.0';
 
 // 캐시할 정적 파일들
 const STATIC_FILES = [
@@ -115,8 +115,17 @@ self.addEventListener('fetch', (event) => {
                 caches.open(DYNAMIC_CACHE)
                   .then((cache) => {
                     // chrome-extension 스키마 체크 추가
-                    if (!request.url.startsWith('chrome-extension://')) {
-                      cache.put(request, responseClone);
+                    if (!request.url.startsWith('chrome-extension://') && 
+                        !request.url.includes('chrome-extension') &&
+                        !request.url.startsWith('moz-extension://') &&
+                        !request.url.startsWith('safari-extension://') &&
+                        !request.url.startsWith('edge-extension://') &&
+                        !request.url.startsWith('opera-extension://')) {
+                      try {
+                        cache.put(request, responseClone);
+                      } catch (error) {
+                        console.log('🚫 캐시 저장 실패 (확장 프로그램 요청):', request.url);
+                      }
                     }
                   });
               }
