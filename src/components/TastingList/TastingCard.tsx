@@ -318,15 +318,13 @@ export default function TastingCard({
               e.preventDefault();
               onEditClick(tasting);
             }}
-            style={{
-              ...buttonStyles.editButton,
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-              }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
             }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+            }}
+            style={buttonStyles.editButton}
           >
             ✏️ 수정
           </button>
@@ -336,15 +334,13 @@ export default function TastingCard({
               e.preventDefault();
               onShareClick(tasting);
             }}
-            style={{
-              ...buttonStyles.shareButton,
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
-              }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
             }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+            }}
+            style={buttonStyles.success}
           >
             📤 공유
           </button>
@@ -354,15 +350,13 @@ export default function TastingCard({
               e.preventDefault();
               onDeleteClick(tasting.id);
             }}
-            style={{
-              ...buttonStyles.deleteButton,
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-              }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
             }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            }}
+            style={buttonStyles.danger}
           >
             🗑️ 삭제
           </button>

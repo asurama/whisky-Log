@@ -118,6 +118,17 @@ export const buttonStyles = {
     fontSize: '14px',
     fontWeight: '600',
     transition: 'all 0.3s ease'
+  },
+  editButton: {
+    padding: '8px 12px',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+    borderRadius: '6px',
+    color: '#60a5fa',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: '500',
+    transition: 'all 0.3s ease'
   }
 };
 
