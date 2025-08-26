@@ -1,14 +1,12 @@
-const CACHE_NAME = 'whisky-log-v6.0.0';
-const STATIC_CACHE = 'whisky-log-static-v6.0.0';
-const DYNAMIC_CACHE = 'whisky-log-dynamic-v6.0.0';
+const CACHE_NAME = 'whisky-log-v7.0.0';
+const STATIC_CACHE = 'whisky-log-static-v7.0.0';
+const DYNAMIC_CACHE = 'whisky-log-dynamic-v7.0.0';
 
 // 캐시할 정적 파일들
 const STATIC_FILES = [
   '/whisky-Log/',
-  '/whisky-Log/offline.html',
+  '/whisky-Log/index.html',
   '/whisky-Log/manifest.json',
-  '/whisky-Log/favicon.ico',
-  '/whisky-Log/next.svg',
   '/whisky-Log/icons/icon-72x72.png',
   '/whisky-Log/icons/icon-96x96.png',
   '/whisky-Log/icons/icon-128x128.png',
@@ -18,7 +16,10 @@ const STATIC_FILES = [
   '/whisky-Log/icons/icon-192x192-maskable.png',
   '/whisky-Log/icons/icon-384x384.png',
   '/whisky-Log/icons/icon-512x512.png',
-  '/whisky-Log/icons/icon-512x512-maskable.png'
+  '/whisky-Log/icons/icon-512x512-maskable.png',
+  '/whisky-Log/static/css/',
+  '/whisky-Log/static/js/',
+  '/whisky-Log/_next/static/'
 ];
 
 // 캐시할 API 엔드포인트들
@@ -70,78 +71,17 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 네트워크 요청 가로채기
+// 네트워크 요청 처리
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // 네비게이션 요청 (페이지 로드)
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // 성공적인 응답을 캐시에 저장
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseClone);
-              });
-          }
-          return response;
-        })
-        .catch(() => {
-          // 오프라인 시 캐시된 페이지 반환
-          return caches.match('/whisky-Log/offline.html');
-        })
-    );
+  const request = event.request;
+  
+  // chrome-extension 스키마 요청은 무시
+  if (request.url.startsWith('chrome-extension://')) {
     return;
   }
-
-  // API 요청
-  if (API_CACHE_PATTERNS.some(pattern => url.pathname.includes(pattern))) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // 성공적인 API 응답을 캐시
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseClone);
-              });
-          }
-          return response;
-        })
-        .catch(() => {
-          // 오프라인 시 캐시된 API 응답 반환
-          return caches.match(request)
-            .then((cachedResponse) => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              // 캐시된 응답이 없으면 기본 오프라인 응답
-              return new Response(
-                JSON.stringify({ 
-                  error: '오프라인 상태입니다. 인터넷 연결을 확인해주세요.',
-                  offline: true 
-                }),
-                {
-                  status: 503,
-                  headers: { 'Content-Type': 'application/json' }
-                }
-              );
-            });
-        })
-    );
-    return;
-  }
-
-  // 정적 자원 요청 (CSS, JS, 이미지 등)
-  if (request.destination === 'style' || 
-      request.destination === 'script' || 
-      request.destination === 'image' ||
-      request.destination === 'font') {
+  
+  // 정적 파일 캐시 처리
+  if (STATIC_FILES.some(file => request.url.includes(file))) {
     event.respondWith(
       caches.match(request)
         .then((cachedResponse) => {
@@ -164,7 +104,7 @@ self.addEventListener('fetch', (event) => {
             .catch(() => {
               // 오프라인 시 기본 아이콘 반환
               if (request.destination === 'image') {
-                return caches.match('/next.svg');
+                return caches.match('/whisky-Log/next.svg');
               }
               return new Response('', { status: 404 });
             });

@@ -78,7 +78,7 @@ export default function TastingModal({ user, bottle, editingTasting, onClose, on
 
       if (bottleError) throw bottleError;
 
-      let newRemainingVolume = bottleData.remaining_volume_ml;
+      let newRemainingVolume: number = (bottleData.remaining_volume_ml as number) || 0;
 
       if (editingTasting && oldConsumedVolume) {
         newRemainingVolume = newRemainingVolume + oldConsumedVolume - newConsumedVolume;

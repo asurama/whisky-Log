@@ -42,7 +42,7 @@ export default function Wishlist({ user, brands: propBrands }: WishlistProps) {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setWishlist(data || []);
+      setWishlist((data as unknown as any[]) || []);
     } catch (error) {
       console.error('위시리스트 로딩 오류:', error);
     } finally {
@@ -58,7 +58,7 @@ export default function Wishlist({ user, brands: propBrands }: WishlistProps) {
         .order('name');
       
       if (error) throw error;
-      setBrands(data || []);
+      setBrands((data as unknown as any[]) || []);
     } catch (error) {
       console.error('브랜드 로딩 오류:', error);
     }

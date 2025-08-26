@@ -38,8 +38,7 @@ export default function TastingHistory({ user, bottle, onClose }: TastingHistory
         .order('tasting_date', { ascending: false });
       
       if (error) throw error;
-      
-      setTastings(data || []);
+      setTastings((data as unknown as any[]) || []);
     } catch (error) {
       console.error('시음 기록 로딩 오류:', error);
     } finally {

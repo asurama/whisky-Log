@@ -124,7 +124,7 @@ export default function WhiskyDetailModal({
         .order('tasting_date', { ascending: false });
 
       if (error) throw error;
-      setTastings(data || []);
+      setTastings((data as unknown as Tasting[]) || []);
     } catch (error) {
       console.error('시음기록 조회 실패:', error);
     } finally {

@@ -212,7 +212,7 @@ export class EnhancedBackupManager {
         total_size: fileBuffer.length,
         checksum: await this.calculateChecksum(fileBuffer),
         is_incremental: isIncremental,
-        previous_backup_id: lastBackup?.backup_id,
+        previous_backup_id: (lastBackup as any)?.backup_id,
         changes_since_last: changes || {
           bottles_added: 0,
           bottles_updated: 0,
@@ -284,7 +284,7 @@ export class EnhancedBackupManager {
       .single();
 
     if (error || !data) return null;
-    return data;
+    return data as any;
   }
 
   // 변경사항 계산
@@ -416,7 +416,7 @@ export class EnhancedBackupManager {
         const backupsToDelete = backups.slice(this.config.max_backups);
         
         for (const backup of backupsToDelete) {
-          await this.deleteBackup(userId, backup.backup_id);
+          await this.deleteBackup(userId, (backup as any).backup_id);
         }
       }
     } catch (error) {
@@ -477,7 +477,7 @@ export class EnhancedBackupManager {
       }
 
       console.log('백업 목록 반환:', data);
-      return data || [];
+      return (data as any) || [];
     } catch (error) {
       console.error('백업 목록 가져오기 중 예외 발생:', error);
       return [];
@@ -503,9 +503,9 @@ export class EnhancedBackupManager {
       const workbook = XLSX.read(arrayBuffer, { type: 'buffer' });
 
       // 데이터 추출
-      const bottles = XLSX.utils.sheet_to_json(workbook.Sheets['Bottles']);
-      const tastings = XLSX.utils.sheet_to_json(workbook.Sheets['Tastings']);
-      const wishlist = XLSX.utils.sheet_to_json(workbook.Sheets['Wishlist']);
+      const bottles = XLSX.utils.sheet_to_json(workbook.Sheets['Bottles']) as any[];
+      const tastings = XLSX.utils.sheet_to_json(workbook.Sheets['Tastings']) as any[];
+      const wishlist = XLSX.utils.sheet_to_json(workbook.Sheets['Wishlist']) as any[];
 
       // 기존 데이터 삭제
       await Promise.all([
@@ -516,13 +516,13 @@ export class EnhancedBackupManager {
 
       // 새 데이터 삽입
       if (bottles.length > 0) {
-        await supabase.from('bottles').insert(bottles);
+        await supabase.from('bottles').insert(bottles as any);
       }
       if (tastings.length > 0) {
-        await supabase.from('tastings').insert(tastings);
+        await supabase.from('tastings').insert(tastings as any);
       }
       if (wishlist.length > 0) {
-        await supabase.from('wishlist').insert(wishlist);
+        await supabase.from('wishlist').insert(wishlist as any);
       }
 
       console.log('백업 복구 완료');

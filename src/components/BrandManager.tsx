@@ -139,7 +139,7 @@ export default function BrandManager({ user, onBrandsUpdate, brands: externalBra
         .order('name');
       
       if (error) throw error;
-      setLocalBrands(data || []);
+      setLocalBrands((data as unknown as Brand[]) || []);
     } catch (error) {
       console.error('브랜드 로딩 오류:', error);
       showToast('브랜드 목록을 불러오는 중 오류가 발생했습니다.', 'error');

@@ -68,7 +68,7 @@ export default function Home() {
         .order('name');
       
       if (error) throw error;
-      setBrands(data || []);
+      setBrands((data as unknown as Brand[]) || []);
     } catch (error) {
       console.error('브랜드 로딩 오류:', error);
     } finally {

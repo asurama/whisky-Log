@@ -127,7 +127,7 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
         .order('tasting_date', { ascending: false });
       
       if (error) throw error;
-      setTastings(data || []);
+      setTastings((data as unknown as any[]) || []);
     } catch (error) {
       console.error('시음 기록 로딩 오류:', error);
     } finally {
@@ -147,7 +147,7 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
         .order('name');
       
       if (error) throw error;
-      setBottles(data || []);
+      setBottles((data as unknown as any[]) || []);
     } catch (error) {
       console.error('위스키 로딩 오류:', error);
     }
@@ -161,7 +161,7 @@ export default function TastingList({ user, brands: propBrands, onShowTastingMod
         .order('name');
       
       if (error) throw error;
-      setBrands(data || []);
+      setBrands((data as unknown as any[]) || []);
     } catch (error) {
       console.error('브랜드 로딩 오류:', error);
     }

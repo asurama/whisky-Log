@@ -389,7 +389,7 @@ export default function EnhancedBackupManager() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <div>
                     <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>
-                      {backup.backup_id}
+                      <span style={{ fontWeight: 'bold' }}>백업 ID:</span> {(backup as any).backup_id}
                     </div>
                     <div style={{ fontSize: '14px', color: '#9CA3AF' }}>
                       {formatDate(backup.created_at)}
@@ -397,7 +397,7 @@ export default function EnhancedBackupManager() {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
-                      onClick={() => restoreBackup(backup.backup_id)}
+                      onClick={() => restoreBackup((backup as any).backup_id)}
                       disabled={loading}
                       style={{
                         padding: '8px 12px',
@@ -413,7 +413,7 @@ export default function EnhancedBackupManager() {
                       복구
                     </button>
                     <button
-                      onClick={() => deleteBackup(backup.backup_id)}
+                      onClick={() => deleteBackup((backup as any).backup_id)}
                       disabled={loading}
                       style={{
                         padding: '8px 12px',

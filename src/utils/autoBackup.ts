@@ -267,7 +267,7 @@ class AutoBackupManager {
 
       if (error) throw error;
       
-      return data?.map(item => item.metadata) || [];
+      return (data?.map(item => item.metadata) as unknown as BackupMetadata[]) || [];
     } catch (error) {
       console.error('백업 목록 조회 실패:', error);
       return [];
@@ -288,7 +288,7 @@ class AutoBackupManager {
         throw new Error('백업을 찾을 수 없습니다.');
       }
 
-      const metadata: BackupMetadata = backupData.metadata;
+      const metadata: BackupMetadata = backupData.metadata as unknown as BackupMetadata;
       
       // 백업 파일 다운로드
       const { data: fileData, error: downloadError } = await supabase.storage
