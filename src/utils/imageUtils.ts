@@ -207,13 +207,23 @@ export async function uploadImageToSupabase(
     console.log('📁 파일 경로:', filePath);
     
     // 버킷 존재 여부 확인
+    console.log('🔍 버킷 목록 조회 시작...');
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    console.log('📦 버킷 조회 결과:', { buckets, bucketsError });
+    
     if (bucketsError) {
       console.error('❌ 버킷 목록 조회 실패:', bucketsError);
+      console.error('❌ 버킷 오류 상세:', {
+        message: bucketsError.message,
+        name: bucketsError.name
+      });
     } else {
       console.log('📦 사용 가능한 버킷들:', buckets?.map(b => b.name));
+      console.log('📦 전체 버킷 데이터:', buckets);
       const bucketExists = buckets?.some(b => b.name === bucket);
       console.log(`🔍 버킷 '${bucket}' 존재 여부:`, bucketExists);
+      console.log(`🔍 검색할 버킷 이름:`, bucket);
+      console.log(`🔍 버킷 이름 타입:`, typeof bucket);
       
       if (!bucketExists) {
         console.error(`❌ 버킷 '${bucket}'이 존재하지 않습니다!`);
