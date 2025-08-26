@@ -156,7 +156,7 @@ export default function TastingCard({
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: i < tasting.nose_rating ? '#FBBF24' : '#374151'
+                          backgroundColor: i < (tasting.nose_rating || 0) ? '#FBBF24' : '#374151'
                         }}
                       />
                     ))}
@@ -188,7 +188,7 @@ export default function TastingCard({
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: i < tasting.palate_rating ? '#FBBF24' : '#374151'
+                          backgroundColor: i < (tasting.palate_rating || 0) ? '#FBBF24' : '#374151'
                         }}
                       />
                     ))}
@@ -220,7 +220,7 @@ export default function TastingCard({
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: i < tasting.finish_rating ? '#FBBF24' : '#374151'
+                          backgroundColor: i < (tasting.finish_rating || 0) ? '#FBBF24' : '#374151'
                         }}
                       />
                     ))}
@@ -252,7 +252,7 @@ export default function TastingCard({
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: i < Math.round(tasting.overall_rating) ? '#FBBF24' : '#374151'
+                          backgroundColor: i < Math.round(tasting.overall_rating || 0) ? '#FBBF24' : '#374151'
                         }}
                       />
                     ))}
