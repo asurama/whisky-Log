@@ -189,7 +189,7 @@ export function compressImage(
  */
 export async function uploadImageToSupabase(
   file: File, 
-  bucket: string = 'testing-images',
+  bucket: string = 'tasting-images',
   path?: string
 ): Promise<string> {
   try {
@@ -275,7 +275,7 @@ export async function uploadImageToSupabase(
  */
 export async function deleteImageFromSupabase(
   imageUrl: string,
-  bucket: string = 'testing-images'
+  bucket: string = 'tasting-images'
 ): Promise<boolean> {
   try {
     // URL에서 파일 경로 추출
@@ -320,13 +320,13 @@ export async function deleteWhiskyImageFromSupabase(
 }
 
 /**
- * 시음 기록용 이미지 업로드 (testing-images 버킷 사용)
+ * 시음 기록용 이미지 업로드 (tasting-images 버킷 사용)
  */
 export async function uploadTastingImageToSupabase(
   file: File, 
   path?: string
 ): Promise<string> {
-  return uploadImageToSupabase(file, 'testing-images', path);
+  return uploadImageToSupabase(file, 'tasting-images', path);
 }
 
 /**
