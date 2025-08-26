@@ -36,7 +36,15 @@ self.addEventListener('install', (event) => {
     caches.open(STATIC_CACHE)
       .then((cache) => {
         console.log('📦 정적 파일 캐싱 중...');
-        return cache.addAll(STATIC_FILES);
+        // chrome-extension URL을 필터링하여 안전한 파일만 캐시
+        const safeFiles = STATIC_FILES.filter(url => 
+          !url.startsWith('chrome-extension://') && 
+          !url.startsWith('moz-extension://') &&
+          !url.startsWith('safari-extension://') &&
+          !url.startsWith('edge-extension://') &&
+          !url.startsWith('opera-extension://')
+        );
+        return cache.addAll(safeFiles);
       })
       .then(() => {
         console.log('✅ 정적 파일 캐싱 완료');
@@ -75,8 +83,18 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   
-  // chrome-extension 스키마 요청은 무시
-  if (request.url.startsWith('chrome-extension://')) {
+  // 지원되지 않는 스키마 요청은 무시
+  if (request.url.startsWith('chrome-extension://') || 
+      request.url.startsWith('moz-extension://') ||
+      request.url.startsWith('safari-extension://') ||
+      request.url.startsWith('edge-extension://') ||
+      request.url.startsWith('opera-extension://') ||
+      request.url.includes('chrome-extension') ||
+      request.url.includes('moz-extension') ||
+      request.url.includes('safari-extension') ||
+      request.url.includes('edge-extension') ||
+      request.url.includes('opera-extension')) {
+    console.log('🚫 확장 프로그램 요청 무시:', request.url);
     return;
   }
   
@@ -91,12 +109,15 @@ self.addEventListener('fetch', (event) => {
           
           return fetch(request)
             .then((response) => {
-              // 성공적인 응답을 캐시
-              if (response.status === 200) {
+              // 성공적인 응답을 캐시 (chrome-extension 체크 추가)
+              if (response.status === 200 && !request.url.includes('chrome-extension')) {
                 const responseClone = response.clone();
                 caches.open(DYNAMIC_CACHE)
                   .then((cache) => {
-                    cache.put(request, responseClone);
+                    // chrome-extension 스키마 체크 추가
+                    if (!request.url.startsWith('chrome-extension://')) {
+                      cache.put(request, responseClone);
+                    }
                   });
               }
               return response;
