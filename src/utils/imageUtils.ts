@@ -193,6 +193,8 @@ export async function uploadImageToSupabase(
   path?: string
 ): Promise<string> {
   try {
+    console.log('🖼️ 이미지 업로드 시작:', { bucket, fileName: file.name, fileSize: file.size });
+    
     // 파일명 생성 (중복 방지)
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
@@ -201,6 +203,18 @@ export async function uploadImageToSupabase(
     
     // 저장 경로 설정
     const filePath = path ? `${path}/${fileName}` : fileName;
+    
+    console.log('📁 파일 경로:', filePath);
+    
+    // 버킷 존재 여부 확인
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    if (bucketsError) {
+      console.error('❌ 버킷 목록 조회 실패:', bucketsError);
+    } else {
+      console.log('📦 사용 가능한 버킷들:', buckets?.map(b => b.name));
+      const bucketExists = buckets?.some(b => b.name === bucket);
+      console.log(`🔍 버킷 '${bucket}' 존재 여부:`, bucketExists);
+    }
     
     // Supabase Storage에 업로드
     const { data, error } = await supabase.storage
@@ -211,18 +225,25 @@ export async function uploadImageToSupabase(
       });
     
     if (error) {
-      console.error('이미지 업로드 오류:', error);
+      console.error('❌ 이미지 업로드 오류:', error);
+      console.error('❌ 오류 상세 정보:', {
+        message: error.message,
+        name: error.name
+      });
       throw new Error(`이미지 업로드 실패: ${error.message}`);
     }
+    
+    console.log('✅ 이미지 업로드 성공:', data);
     
     // 공개 URL 생성
     const { data: urlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(filePath);
     
+    console.log('🔗 공개 URL 생성:', urlData.publicUrl);
     return urlData.publicUrl;
   } catch (error) {
-    console.error('이미지 업로드 중 오류:', error);
+    console.error('❌ 이미지 업로드 중 오류:', error);
     throw error;
   }
 }
