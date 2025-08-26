@@ -217,7 +217,21 @@ export async function uploadImageToSupabase(
       
       if (!bucketExists) {
         console.error(`❌ 버킷 '${bucket}'이 존재하지 않습니다!`);
-        throw new Error(`버킷 '${bucket}'이 존재하지 않습니다. 사용 가능한 버킷: ${buckets?.map(b => b.name).join(', ')}`);
+        console.log('📋 사용 가능한 버킷 목록:', buckets?.map(b => b.name).join(', '));
+        
+        // 유사한 이름의 버킷 찾기
+        const similarBuckets = buckets?.filter(b => 
+          b.name.toLowerCase().includes('tasting') || 
+          b.name.toLowerCase().includes('image') ||
+          b.name.toLowerCase().includes('test')
+        );
+        
+        if (similarBuckets && similarBuckets.length > 0) {
+          console.log('🔍 유사한 버킷들:', similarBuckets.map(b => b.name));
+          throw new Error(`버킷 '${bucket}'이 존재하지 않습니다. 유사한 버킷: ${similarBuckets.map(b => b.name).join(', ')}`);
+        } else {
+          throw new Error(`버킷 '${bucket}'이 존재하지 않습니다. 사용 가능한 버킷: ${buckets?.map(b => b.name).join(', ')}`);
+        }
       }
     }
     
